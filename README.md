@@ -97,7 +97,7 @@ Le premier vérifie l’interface, les imports et l’affichage mobile. Le secon
 
 Le workflow `.github/workflows/pages.yml` valide les tests, prépare les fichiers statiques et les publie lors d’un push sur `main` ou d’un lancement manuel. Il n’effectue aucune collecte REMAP.
 
-Dans le dépôt GitHub, sélectionner **Settings → Pages → Source → GitHub Actions**, puis lancer le workflow. Tous les chemins du site sont relatifs pour fonctionner sous le sous-répertoire `science006`.
+Le site peut être publié avec **Settings → Pages → Source → GitHub Actions**, puis le workflow ci-dessus. La publication **Deploy from a branch → main → / (root)** convient également : le fichier `.nojekyll` conserve les fichiers statiques sans transformation, notamment le lien de documentation `README.md`. Tous les chemins sont relatifs pour fonctionner sous le sous-répertoire `science006`.
 
 ## Fond géographique
 
