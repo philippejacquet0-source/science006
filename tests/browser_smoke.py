@@ -1,8 +1,9 @@
-import asyncio, json
+import asyncio, json, os
 from pathlib import Path
 from playwright.async_api import async_playwright
 
 ROOT=Path(__file__).resolve().parents[1]
+SITE_URL=os.environ.get("REMANENCE_TEST_URL", "http://127.0.0.1:4173/").rstrip("/")+"/"
 async def main():
  async with async_playwright() as p:
   browser=await p.chromium.launch(executable_path='/usr/bin/chromium',args=['--no-sandbox'])
@@ -10,7 +11,7 @@ async def main():
   errors=[]; requests=[]
   page.on('pageerror',lambda e:errors.append(str(e)))
   page.on('request',lambda r:requests.append(r.url))
-  await page.goto('http://127.0.0.1:4173/',wait_until='networkidle')
+  await page.goto(SITE_URL,wait_until='networkidle')
   await page.wait_for_function("document.querySelector('#stat-active').textContent !== '—'")
   assert await page.locator('#source-tag').inner_text()=='SIMULATION'
   assert int(await page.locator('#stat-events').inner_text())>=1
@@ -47,10 +48,10 @@ async def main():
   await page.set_viewport_size({'width':390,'height':844});await page.wait_for_timeout(250)
   assert await page.evaluate('document.documentElement.scrollWidth <= window.innerWidth')
   await page.locator('#toast').evaluate('e=>e.hidden=true');await page.screenshot(path='/tmp/remanence-mobile.png',full_page=True)
-  await page.goto('http://127.0.0.1:4173/tools/',wait_until='networkidle')
+  await page.goto(SITE_URL+'tools/',wait_until='networkidle')
   assert (await page.locator('#bookmarklet').get_attribute('href')).startswith('javascript:')
   assert not errors, errors
-  assert all(u.startswith('http://127.0.0.1:4173/') for u in requests), requests
+  assert all(u.startswith(SITE_URL) for u in requests), requests
   print(json.dumps({'browser':'Chromium','desktop':'1440px','mobile':'390px','checks':['demo','animation','timeline','station selection','event selection','zoom','settings','CSV import','JSON export','invalid import preservation','responsive layout','bookmarklet installation','no external requests','no JavaScript errors']},ensure_ascii=False))
   await browser.close()
 asyncio.run(main())

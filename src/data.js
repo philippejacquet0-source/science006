@@ -39,7 +39,7 @@ export function parseTimestamp(value) {
 }
 
 export function normalizeDataset(input) {
-  if (input?.format === 'remap-capture-v1') throw new Error('Cette capture contient les réponses JSON brutes de REMAP. L’adaptateur doit encore être ajusté à leur structure réelle. Utilisez pour le moment le CSV ou le JSON documenté.');
+  if (input?.format === 'remap-capture-v1') return parseRemapCapture(input);
   if (!input || !Array.isArray(input.stations) || !Array.isArray(input.observations)) throw new Error('Le JSON doit contenir deux tableaux : stations et observations. Consultez le fichier exemple.');
   if (!input.stations.length || !input.observations.length) throw new Error('Le fichier ne contient pas de balises ou de mesures.');
   if (input.observations.length > MAX_MEASUREMENTS) throw new Error(`Maximum ${MAX_MEASUREMENTS.toLocaleString('fr-FR')} mesures par session. Sélectionnez une région ou une période plus courte.`);
@@ -76,6 +76,69 @@ export function normalizeDataset(input) {
   const minTime = observations[0].time, maxTime = observations.at(-1).time;
   if (maxTime - minTime > 120 * 24 * HOUR) throw new Error('Ce prototype accepte au maximum 120 jours par session.');
   return { stations, observations, unit: 'nSv/h', minTime, maxTime, duplicates, name: String(input.name || 'Données importées').slice(0, 160), synthetic: input.synthetic === true };
+}
+
+function captureRows(resource) {
+  if (/\/timeseries\/v1\/stations\/timeseries\//.test(resource?.path || '') && Array.isArray(resource.data)) return {type:'series',rows:resource.data};
+  if (/\/timeseries\/v1\/stations\/\d{14}\/\d{14}\/area$/.test(resource?.path || '') && Array.isArray(resource.data?.data)) return {type:'stations',rows:resource.data.data};
+  return {type:'other',rows:[]};
+}
+
+function usableStation(record) {
+  return record && typeof record.code === 'string' && /^[A-Za-z0-9][A-Za-z0-9_.:/-]{1,119}$/.test(record.code)
+    && typeof record.lat === 'number' && Number.isFinite(record.lat) && Math.abs(record.lat)<=90
+    && typeof record.long === 'number' && Number.isFinite(record.long) && Math.abs(record.long)<=180;
+}
+
+export function summarizeCapture(input) {
+  if (!input || !Array.isArray(input.resources) || input.resources.length>400) throw new Error('Capture REMAP invalide : tableau resources attendu, avec au maximum 400 réponses.');
+  const summary={resources:input.resources.length,stationResponses:0,seriesResponses:0,stationRows:0,measurementRows:0,usableStationRows:0,series:[],clientScripts:input.client?.scripts || []};
+  for (const resource of input.resources) {
+    const {type,rows}=captureRows(resource);
+    if(type==='stations') {summary.stationResponses++;summary.stationRows+=rows.length;summary.usableStationRows+=rows.filter(usableStation).length;}
+    if(type==='series') {
+      summary.seriesResponses++;summary.measurementRows+=rows.length;
+      let start=null,end=null;
+      for(const row of rows){try{const t=parseTimestamp(row.date);start=start===null?t:Math.min(start,t);end=end===null?t:Math.max(end,t);}catch{}}
+      summary.series.push({count:rows.length,start,end,stage:resource.stage || 'network'});
+    }
+  }
+  return summary;
+}
+
+export function parseRemapCapture(input) {
+  const summary=summarizeCapture(input);
+  const metadata=new Map();
+  for(const resource of input.resources) {
+    if(resource.stage!=='application')continue;
+    const {type,rows}=captureRows(resource);
+    if(type!=='stations')continue;
+    for(const row of rows) if(usableStation(row)) {
+      const station={id:row.code,name:row.name || row.code,country:row.country || '',lat:row.lat,lon:row.long};
+      const previous=metadata.get(station.id);
+      if(previous&&(Math.abs(previous.lat-station.lat)>1e-6||Math.abs(previous.lon-station.lon)>1e-6))throw new Error(`Coordonnées contradictoires dans la capture pour ${station.id}.`);
+      if(!previous)metadata.set(station.id,station);
+    }
+  }
+  const observations=[];
+  for(const resource of input.resources) {
+    if(resource.stage!=='application')continue;
+    const {type,rows}=captureRows(resource);
+    if(type!=='series')continue;
+    for(const row of rows) if(metadata.has(row.code))observations.push({stationId:row.code,time:row.date,value:row.value});
+  }
+  if(!observations.length) {
+    const encoded=summary.stationRows>0&&summary.usableStationRows===0;
+    const error=new Error(encoded
+      ? `Capture reconnue : ${summary.stationResponses} listes de balises et ${summary.seriesResponses} séries (${summary.measurementRows} points). Les identifiants et coordonnées sont encodés dans les réponses réseau ; ils ne peuvent pas être interprétés comme des mesures affichées. Reprenez une capture avec l’outil mis à jour, puis sélectionnez les balises et ouvrez leurs courbes.`
+      : 'Capture reconnue, mais aucune série après traitement par REMAP ne correspond à une balise avec des coordonnées exploitables. Utilisez l’outil mis à jour et capturez la liste de balises et leurs séries dans la même session. Les réponses réseau seules ne sont pas interprétées.');
+    error.captureSummary=summary;
+    throw error;
+  }
+  const used=new Set(observations.map(o=>o.stationId));
+  const dataset=normalizeDataset({name:'Capture REMAP',unit:'nSv/h',stations:[...metadata.values()].filter(s=>used.has(s.id)),observations});
+  dataset.captureSummary={...summary,importedStations:dataset.stations.length,importedMeasurements:dataset.observations.length,unmatchedMeasurements:summary.measurementRows-observations.length};
+  return dataset;
 }
 
 export function parseCSV(text) {

@@ -8,8 +8,8 @@ Une application **statique**, en HTML/CSS/JavaScript, pour explorer localement l
 - Frise horaire, animation et histogramme des balises en écart.
 - Référence locale robuste, persistance et regroupement géographique paramétrables.
 - Liste d’épisodes, succession des centres des groupes et courbes détaillées.
-- Import CSV/JSON et export des mesures normalisées avec les paramètres d’analyse.
-- Outil expérimental de capture des nouvelles réponses JSON dans une session REMAP ouverte manuellement.
+- Import CSV/JSON, diagnostic des captures REMAP et import des états client dont les identifiants et coordonnées sont exploitables ; export des mesures normalisées avec les paramètres d’analyse.
+- Capture passive des réponses réseau et observation des objets JSON après les callbacks du client jQuery, dans une session REMAP ouverte manuellement.
 
 Le premier écran utilise **96 balises fictives et des mesures synthétiques** entre le 22 septembre et le 9 octobre 2026. La fenêtre analysée commence le 6 octobre. Il illustre un scénario Bretagne → Finlande ; il ne confirme aucune observation réelle. Une pointe brève et des données manquantes sont incluses. Les noms et coordonnées du réseau de démonstration ne sont pas ceux des balises EURDEP.
 
@@ -36,7 +36,7 @@ FR-A,Exemple A,48.4,-4.5,2026-10-05T00:00:00Z,100,nSv/h
 
 `station_name` et `country` sont facultatifs. Virgule, point-virgule ou tabulation ; champs entre guillemets pris en charge. Les nombres à virgule sont acceptés avec un séparateur point-virgule. L’horodatage doit indiquer explicitement son fuseau (`Z` ou un décalage). Les µSv/h et μSv/h sont convertis en nSv/h. Unités absentes ou inconnues, coordonnées contradictoires et doublons ayant des valeurs différentes sont refusés. Les doublons identiques sont retirés.
 
-[Télécharger l’exemple](data/exemple.csv) : trois balises fictives, un historique et un épisode, avec des noms contenant une virgule. Les captures réseau brutes REMAP ne sont pas des CSV de mesures et ne doivent pas être présentées comme des imports fonctionnels.
+[Télécharger l’exemple](data/exemple.csv) : trois balises fictives, un historique et un épisode, avec des noms contenant une virgule. Les captures réseau brutes REMAP peuvent être encodées ; elles sont diagnostiquées sans tracer leurs valeurs. Voir la section REMAP.
 
 ## Import JSON
 
@@ -72,9 +72,26 @@ Les unités de la carte REMAP sont confirmées par son aide : moyennes horaires 
 
 [L’outil de capture](tools/index.html) installe un favori JavaScript autonome, sans charger de script depuis GitHub dans la page REMAP.
 
-L’utilisateur ouvre REMAP, passe lui-même le CAPTCHA et les étapes d’accès, lance le favori, puis ouvre des courbes ou actualise la carte. L’outil observe les futures réponses JSON de `fetch` et `XMLHttpRequest` dans l’onglet courant ; il n’émet pas de nouvelles requêtes et ne récupère pas de cookies ou d’en-têtes. Il filtre les chemins d’authentification, supprime les paramètres d’URL et certains champs sensibles. Il n’est pas un collecteur universel et ne lit pas les réponses antérieures à son activation, les WebSockets ou les réponses non JSON.
+L’utilisateur ouvre REMAP, passe lui-même le CAPTCHA et les étapes d’accès, lance le favori, puis **sélectionne les balises, ouvre leurs courbes et règle la période**. La présence d’une balise sur la carte ne signifie pas que sa série est chargée. Seules les séries effectivement consultées peuvent être capturées ; un ensemble régional incomplet ne constitue pas une couverture paneuropéenne.
 
-La capture `remap-capture-v1` est un échantillon technique pour développer l’adaptateur. **Aucun import automatique de la structure réelle REMAP n’est actuellement revendiqué.** Le parcours après CAPTCHA n’a pas été validé sur des mesures réelles. L’utilisateur utilise ses données dans le cadre des autorisations dont il dispose.
+L’outil observe les futures réponses JSON de `fetch` et `XMLHttpRequest` et, quand jQuery est présent, les objets transmis à `ajaxSuccess` après les callbacks de l’application. La sérialisation est différée de 100 ms pour observer une éventuelle transformation en place. Il ne décode pas les nombres ou les chaînes lui-même ; une transformation produisant de nouveaux objets peut ne pas être observée.
+
+Aucune requête supplémentaire n’est émise. Le fichier exporte les chemins des scripts et les noms des en-têtes de réponse, sans leurs valeurs, paramètres d’URL, cookies ni corps des requêtes. Il filtre les chemins d’authentification et certains champs sensibles. Les réponses antérieures à son activation, les WebSockets et les réponses non JSON ne sont pas collectées.
+
+Le format reste `remap-capture-v1`, avec `toolVersion: 2`, des diagnostics `client` et un `stage` par réponse (`network` ou `application`). L’adaptateur reconnaît les listes `/mapSvc/api/timeseries/v1/stations/<début>/<fin>/area` et les tableaux `/mapSvc/api/timeseries/v1/stations/timeseries/<début>/<fin>`. Il associe les séries par `code`, convertit `date` en UTC et `long` en longitude. **Seuls les états `application` avec identifiants ASCII et coordonnées valides sont importés.** Les réponses réseau seules ne sont pas assimilées à des débits de dose décodés.
+
+Une capture réelle fournie le 9 octobre 2026 contient 14 réponses : 6 listes de balises et 8 séries (400 points au total), dont deux séries de 186 points du 2 au 9 octobre. Les identifiants, noms et coordonnées y sont encodés ; ce fichier est correctement diagnostiqué, mais ses valeurs ne sont pas importées. Aucun déchiffrement conjectural ou facteur de conversion déduit de la plausibilité des valeurs n’est appliqué. Les captures de l’outil version 2 et leur transformation réelle restent à valider après le CAPTCHA. L’utilisateur utilise ses données dans le cadre des autorisations dont il dispose.
+
+## Vérifications navigateur
+
+Dans l’environnement de développement disposant de Playwright Python et Chromium, démarrer le serveur puis exécuter :
+
+```sh
+python3 tests/browser_smoke.py
+python3 tests/capture_smoke.py
+```
+
+Le premier vérifie l’interface, les imports et l’affichage mobile. Le second utilise exclusivement des réponses et un client jQuery simulés ; il ne valide pas une récupération réelle après CAPTCHA.
 
 ## Publier sur GitHub Pages
 

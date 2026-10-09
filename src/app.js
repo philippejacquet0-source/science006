@@ -207,7 +207,7 @@ $('import-button').addEventListener('click',()=>$('import-dialog').showModal());
 for(const button of document.querySelectorAll('.close-dialog'))button.addEventListener('click',()=>button.closest('dialog').close());
 for(const dialog of document.querySelectorAll('dialog'))dialog.addEventListener('click',event=>{if(event.target===dialog){const r=dialog.getBoundingClientRect();if(event.clientX<r.left||event.clientX>r.right||event.clientY<r.top||event.clientY>r.bottom)dialog.close();}});
 $('import-form').addEventListener('submit',async event=>{
-  event.preventDefault();$('import-error').hidden=true;const file=$('data-file').files[0];if(!file)return;
+  event.preventDefault();$('import-error').hidden=true;$('capture-summary').hidden=true;const file=$('data-file').files[0];if(!file)return;
   $('import-submit').disabled=true;
   try {
     if(file.size>20*1024*1024)throw new Error('Le fichier dépasse 20 Mo. Sélectionnez une région ou une période plus courte.');
@@ -215,8 +215,16 @@ $('import-form').addEventListener('submit',async event=>{
     const end=Math.floor(next.maxTime/HOUR)*HOUR,min=Math.floor(next.minTime/HOUR)*HOUR;
     const start=Math.min(end,Math.max(min+24*HOUR,end-72*HOUR));
     await loadDataset(next,{...DEFAULT_SETTINGS,start,end},file.name);$('import-dialog').close();
-    toast(`${next.observations.length.toLocaleString('fr-FR')} mesures importées${next.duplicates?` · ${next.duplicates} doublons identiques retirés`:''}.`);
-  }catch(error){$('import-error').textContent=error.message;$('import-error').hidden=false;}
+    toast(`${next.observations.length.toLocaleString('fr-FR')} mesures importées${next.duplicates?` · ${next.duplicates} doublons identiques retirés`:''}${next.captureSummary?.unmatchedMeasurements?` · ${next.captureSummary.unmatchedMeasurements} points de capture non importés`:''}.`);
+  }catch(error){
+    $('import-error').textContent=error.message;$('import-error').hidden=false;
+    if(error.captureSummary){
+      const summary=error.captureSummary;
+      const lines=[`${summary.resources} réponses · ${summary.stationResponses} listes de balises · ${summary.seriesResponses} séries temporelles`,`${summary.measurementRows} points reçus ; les valeurs encodées ne sont pas tracées.`];
+      for(const [i,series]of summary.series.entries())lines.push(`Série ${i+1} : ${series.count} points${series.start!==null?` · ${date(series.start)} — ${date(series.end)}`:''}`);
+      $('capture-summary').replaceChildren(...lines.map(line=>{const p=document.createElement('p');p.textContent=line;return p;}));$('capture-summary').hidden=false;
+    }
+  }
   finally{$('import-submit').disabled=false;}
 });
 const settingInputs={threshold:'threshold-setting',minDuration:'duration-setting',radiusKm:'radius-setting',minStations:'count-setting',baselineDays:'baseline-setting',noiseFloor:'noise-setting'};
