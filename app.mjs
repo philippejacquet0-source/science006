@@ -7,6 +7,7 @@ const countryNames=new Intl.DisplayNames(['fr'],{type:'region'});
 const country=c=>{try{return countryNames.of(c)||c;}catch{return c;}};
 let meta,values,result,selected,stationIndex,instant=0,worker,request=0,timer=null,networkOn=false,detailed=false;
 let importWorker=null,busy=false,sourceEpoch=0,catalogue=null;
+let gifWorker=null,gifUrl=null;
 const map=L.map('map',{preferCanvas:true,zoomControl:false,minZoom:2,maxZoom:17}).setView([52,12],4);
 L.control.zoom({position:'topright'}).addTo(map);L.control.scale({position:'bottomright',imperial:false}).addTo(map);
 const renderer=L.canvas({padding:.5}),networkLayer=L.layerGroup(),eventLayer=L.layerGroup().addTo(map),currentLayer=L.layerGroup().addTo(map),labelLayer=L.layerGroup().addTo(map);
@@ -142,6 +143,33 @@ function exportEvent(){
  const bundle={schema:'remanence-clusters-v2',name:`Cluster descriptif ${selected.id}`,unit:'nSv/h',synthetic:false,stations:[...ids].map(s=>meta.stations[s]),observations,analysisSettings:result.settings,event,provenance:{source:meta.sourceKind==='local'?'Dossier local REMAP':'Jeu en ligne REMAP',sourceName:meta.sourceName,datasetId:meta.datasetId,datasetLabel:meta.datasetLabel,start:meta.start,end:meta.end,validLots:meta.validLots,plannedLots:meta.plannedLots,missingLots:meta.missingLots,invalidLots:meta.invalidLots||[],duplicateCount:meta.duplicateCount||0,method:'CLUSTERS.md'}};
  const url=URL.createObjectURL(new Blob([JSON.stringify(bundle,null,2)],{type:'application/json'})),a=document.createElement('a');a.href=url;a.download=`remap-evenement-${selected.id}.json`;a.click();setTimeout(()=>URL.revokeObjectURL(url),1000);
 }
+function cancelGif(){gifWorker?.terminate();gifWorker=null;$('gif-cancel').hidden=true;$('gif-generate').disabled=false;}
+function clearGif(){cancelGif();$('gif-preview').removeAttribute('src');$('gif-result').hidden=true;if(gifUrl)URL.revokeObjectURL(gifUrl);gifUrl=null;}
+function openExport(){
+ if(!selected||busy)return;stop();clearGif();$('export-title').textContent=`Exporter le cluster ${String(selected.id).padStart(2,'0')}`;
+ $('gif-status').textContent='Le GIF parcourt tout le cluster en 3 secondes, en boucle. La vue européenne comprend le réseau, les zones horaires, leurs liaisons et la courbe d’activité. Un repère mondial conserve les sites hors Europe.';
+ $('gif-generate').textContent='Générer le GIF · 3 secondes';$('export-dialog').showModal();
+}
+function generateGif(){
+ if(!selected||gifWorker||busy)return;clearGif();
+ const event={...selected},snapshot={event,stations:meta.stations,settings:result.settings,meta:{origin:meta.origin,start:meta.start,end:meta.end,coverage:meta.coverage,missingLots:meta.missingLots.length}};
+ const filename=`bouffi-cluster-${event.id}-${new Date(meta.origin+event.start*3600000).toISOString().slice(0,10)}.gif`;
+ $('gif-generate').disabled=true;$('gif-cancel').hidden=false;$('gif-status').textContent='Préparation de la carte et de l’animation…';
+ const target=new Worker('./gif-worker.mjs?v=gif-export-20261020',{type:'module'});gifWorker=target;
+ target.onmessage=({data:m})=>{if(gifWorker!==target)return;
+  if(m.type==='progress'){$('gif-status').textContent=m.message;return;}
+  if(m.type==='error'){cancelGif();$('gif-status').textContent='Export non généré : '+m.message;return;}
+  if(m.type==='done'){
+   gifUrl=URL.createObjectURL(new Blob([m.buffer],{type:'image/gif'}));$('gif-preview').src=gifUrl;$('gif-preview').alt=`Évolution du cluster ${event.id} sur la carte de l’Europe, du ${timeLabel(event.start)} au ${timeLabel(event.end)} UTC.`;
+   $('gif-download').href=gifUrl;$('gif-download').download=filename;$('gif-result').hidden=false;
+   $('gif-status').textContent=`GIF prêt · 3 secondes · ${m.width} × ${m.height} pixels · ${m.frames} images · ${fmt(m.buffer.byteLength/1048576,1)} Mo. Généré dans votre navigateur.`;cancelGif();
+  }
+ };
+ target.onerror=()=>{if(gifWorker!==target)return;cancelGif();$('gif-status').textContent='La création du GIF a échoué. Réessayez ; les données du cluster restent disponibles en JSON.';};
+ target.postMessage(snapshot);
+}
+$('gif-generate').onclick=generateGif;$('gif-cancel').onclick=()=>{cancelGif();$('gif-status').textContent='Génération annulée.';};$('export-json').onclick=exportEvent;
+$('export-dialog').onclose=clearGif;
 $('search').oninput=renderList;$('sort').onchange=renderList;$('fit').onclick=frameSelected;$('basemap').onclick=toggleBasemap;
 if($('tracks'))$('tracks').onclick=()=>{$('tracks').setAttribute('aria-pressed',$('tracks').getAttribute('aria-pressed')!=='true');renderTime();};
 if($('restart'))$('restart').onclick=()=>{if(!selected)return;stop();instant=selected.start;renderTime();};
@@ -149,12 +177,12 @@ function showNamedStation(){if(!meta||!result)return;const s=meta.stations.findI
 if($('station-find')){$('station-find').onchange=showNamedStation;$('station-find').onkeydown=e=>{if(e.key==='Enter')showNamedStation();};}if($('station-go'))$('station-go').onclick=showNamedStation;
 $('network').onclick=()=>{networkOn=!networkOn;$('network').setAttribute('aria-pressed',networkOn);if(networkOn){if(!networkLayer.getLayers().length)drawNetwork();networkLayer.addTo(map);}else map.removeLayer(networkLayer);};
 $('time').oninput=()=>{stop();instant=Number($('time').value);renderTime();};$('previous').onclick=()=>{stop();instant=Math.max(Number($('time').min),instant-1);renderTime();};$('next').onclick=()=>{stop();instant=Math.min(Number($('time').max),instant+1);renderTime();};$('play').onclick=play;$('speed').onchange=()=>{if(timer){stop();play();}};
-$('station-select').onchange=()=>chooseStation(Number($('station-select').value));$('export').onclick=exportEvent;
+$('station-select').onchange=()=>chooseStation(Number($('station-select').value));$('export').onclick=openExport;
 $('settings-open').onclick=()=>{$('settings-error').textContent='';$('settings').showModal();};$('method-open').onclick=()=>{$('method').showModal();};for(const b of document.querySelectorAll('[data-close]'))b.onclick=()=>$(b.dataset.close).close();
  $('reset').onclick=()=>{for(const [key,value] of Object.entries(defaults)){const control=$('settings-form').elements[key];if(control)control.value=value;}$('sensitivity').value='low';};
 function currentSettings(){const settings=Object.fromEntries([...new FormData($('settings-form'))].map(([k,v])=>[k,Number(v)])),presets={high:{z:3,minExcess:3},normal:{z:4,minExcess:5},low:{z:6,minExcess:10}};return Object.assign(settings,presets[$('sensitivity').value]);}
 $('settings-form').onsubmit=event=>{event.preventDefault();const settings=currentSettings();if(settings.minBaseline>settings.baselineHours||settings.baselineHours>=meta.T){$('settings-error').textContent='La période de référence doit être plus courte que le jeu de données et contenir le minimum d’heures demandé.';return;}recalculate(settings);};
-function setBusy(value){busy=value;$('settings-open').disabled=value||!meta;$('settings-form').querySelector('[type=submit]').disabled=value;for(const id of ['import-folder','source-select','online-dataset','load-online'])$(id).disabled=value;}
+function setBusy(value){busy=value;$('settings-open').disabled=value||!meta;$('settings-form').querySelector('[type=submit]').disabled=value;for(const id of ['import-folder','source-select','online-dataset','load-online'])$(id).disabled=value;$('export').disabled=value||!selected;}
 function updateSourceControls(){const local=$('source-select').value==='local';$('local-controls').hidden=!local;$('online-controls').hidden=local;}
 function updateDataset(){
  $('data-stations').textContent=fmt(meta.N);$('data-measures').textContent=fmt(meta.rawCount);$('data-coverage').textContent=fmt(meta.coverage*100,1)+' %';$('time').max=meta.T-1;
@@ -172,6 +200,7 @@ function displayResult(next){
  result=next;populateMethod();$('settings').close();$('criteria-note').textContent=`Au moins ${result.settings.minStations} balises par zone · déplacement ≥ ${result.settings.minTravel} km · durée ≥ ${result.settings.minHours} h`;
  notify(`${result.events.length} ${result.events.length===1?'cluster en déplacement retenu':'clusters en déplacement retenus'} sur ${result.allEvents.length} ensembles · ${fmt(result.zoneCount)} zones horaires · ${meta.missingLots.length} lots absents · ${(meta.invalidLots||[]).length} lots invalides exclus`);
  if(result.events.length)selectEvent(orderedEvents()[0].id);else{selected=null;eventLayer.clearLayers();currentLayer.clearLayers();renderList();instant=Math.min(meta.T-1,result.settings.baselineHours);renderTime();$('map-context').textContent='RÉSEAU IMPORTÉ';$('map-title').textContent='Aucun événement avec ces critères';$('timeline-title').textContent='Activité globale · ajustez les critères pour regrouper les écarts';$('event-facts').innerHTML='';$('lineage').innerHTML='';$('route-note').textContent='Aucun cluster satisfait ces critères de déplacement. Les mesures restent consultables.';$('station-select').innerHTML=meta.stations.map((s,i)=>`<option value="${i}">${escape(s.id)}</option>`).join('');chooseStation(0);}
+ $('export').disabled=busy||!selected;
 }
 function bindWorker(target){target.onmessage=event=>{const m=event.data;if(m.request!==request)return;setBusy(false);if(m.type==='error'){$('settings-error').textContent=m.message;notify(m.message,true);return;}displayResult(m.result);};target.onerror=()=>{setBusy(false);notify('Le calcul a échoué. Rechargez les données ou ajustez les critères.',true);};}
 function clearDatasetView(){stop();selected=null;result=null;stationIndex=undefined;instant=0;eventLayer.clearLayers();currentLayer.clearLayers();networkLayer.clearLayers();$('search').value='';$('station-find').value='';$('lineage').innerHTML='';$('station-chart').innerHTML='';}

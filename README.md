@@ -19,6 +19,8 @@ Réglages initiaux demandés :
 
 Les autres critères et leurs limites sont décrits dans [CLUSTERS.md](CLUSTERS.md). Lecture anime les zones ; le graphe montre leurs branches. Rechercher d'autres événements recalcule l'ensemble du réseau avec les nouveaux seuils. Filtrer par pays ou balise agit sur la liste des résultats. Afficher une balise ouvre sa courbe et, s'il est retenu, le cluster auquel elle appartient.
 
+La vitesse normale de lecture correspond à l'ancien ×5 : une case horaire toutes les 140 ms. **Exporter le cluster** propose un GIF animé de trois secondes, avec aperçu et téléchargement, ou les données JSON. Le GIF cadre l'Europe indépendamment de la carte interactive, affiche le réseau complet, les zones et liaisons du cluster, les dates UTC, les critères et une courbe d'activité. Un repère mondial conserve les sites hors Europe. Il utilise le fond Natural Earth 1:50m embarqué (pays, limites régionales, lacs, cours d'eau, villes), sans tuiles distantes. Jusqu'à 60 images sont conservées ; au-delà, des instants horaires régulièrement espacés sont sélectionnés, sans interpolation, en conservant le début et la fin. La durée encodée est exactement 3 000 ms, en boucle. La génération est annulable et reste dans le navigateur.
+
 ## Jeux de données en ligne
 
 Deux collectes réalisées par l'utilisateur dans sa session REMAP, après passage manuel du CAPTCHA, sont proposées :
