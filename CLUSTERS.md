@@ -62,6 +62,8 @@ Le dialogue Rechercher d'autres événements propose trois commandes principales
 
 ## Données et limites
 
+Le bouton **Importer un dossier local** remplace les données de l'onglet par une collecte utilisateur, sans transmettre ses fichiers. Les événements sont recalculés avec les critères appliqués. La période, les effectifs et le bilan des lots se rapportent alors à ce dossier, et non à l'instantané ci-dessous. Voir [IMPORT.md](IMPORT.md) pour le format, les vérifications, les lacunes et les limites de l'import.
+
 L'instantané comporte 5 981 balises, 1 021 060 observations sources, une couverture des cases horaires de 90,8 %, et six lots absents. La dernière case est partielle. Les coordonnées ont été arrondies par le client REMAP. La qualité instrumentale et les conditions météorologiques ne sont pas validées par cet outil.
 
 La densité du réseau, les lacunes, les seuils, le chaînage spatial, les règles de proximité, les fusions et le choix de la première activation influencent fortement les clusters. La présence de FR1191 dans un vaste ensemble constitue une vérification de couverture du cas demandé, pas une preuve que toutes ses observations relèvent d'une même cause. L'appartenance doit être examinée heure par heure et par comparaison des sensibilités.
