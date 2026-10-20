@@ -1,5 +1,5 @@
 import {analyse,distance} from './engine.mjs';
-export const clusterDefaults={baselineHours:72,minBaseline:48,z:4,noise:1.5,minExcess:5,duration:2,radius:120,minStations:4,minArea:0,peakSeparation:6,peakProminence:10,maxSpeed:40,minTravel:1000,minHours:8,minCoherence:.55};
+export const clusterDefaults={baselineHours:72,minBaseline:48,z:6,noise:1.5,minExcess:10,duration:2,radius:150,minStations:10,minArea:0,peakSeparation:6,peakProminence:10,maxSpeed:100,minTravel:1000,minHours:5,minCoherence:.55};
 const median=a=>{const b=[...a].sort((x,y)=>x-y),i=b.length>>1;return b.length%2?b[i]:(b[i-1]+b[i])/2;};
 function cells(ids,stations){const groups=new Map();for(const s of ids){const p=stations[s],key=`${Math.floor(p.lat*111.195/50)}|${Math.floor(p.lon*111.195*Math.cos(p.lat*Math.PI/180)/50)}`;if(!groups.has(key))groups.set(key,[]);groups.get(key).push(p);}return [...groups.entries()].map(([key,ps])=>({key,lat:median(ps.map(p=>p.lat)),lon:median(ps.map(p=>p.lon))}));}
 function proximity(a,b,reach){let nearA=0,nearB=0,min=Infinity;const inB=new Set();for(const p of a.cells){let near=false;for(let j=0;j<b.cells.length;j++){const d=distance(p,b.cells[j]);min=Math.min(min,d);if(d<=reach){near=true;inB.add(j);}}if(near)nearA++;}nearB=inB.size;return {a:nearA/a.cells.length,b:nearB/b.cells.length,nearA,nearB,min};}

@@ -1,5 +1,5 @@
 import {hull} from './engine.mjs';
-import {clusterDefaults as defaults} from './cluster-engine.mjs';
+import {clusterDefaults as defaults} from './cluster-engine.mjs?v=defaults-20261020';
 import {validateCatalogue,validateHourly} from './dataset-catalog.mjs';
 const $=id=>document.getElementById(id),fmt=(v,d=0)=>Number.isFinite(v)?v.toLocaleString('fr-FR',{maximumFractionDigits:d}):'—';
 const escape=t=>String(t??'').replaceAll('&','&amp;').replaceAll('<','&lt;').replaceAll('>','&gt;').replaceAll('"','&quot;');
@@ -32,9 +32,10 @@ function toggleBasemap(){
 }
 function drawNetwork(){networkLayer.clearLayers();for(let s=0;s<meta.N;s++){const station=meta.stations[s];L.circleMarker([station.lat,station.lon],{renderer,radius:2.2,color:'#899b8c',weight:.5,fillOpacity:.35}).on('click',()=>chooseStation(s)).addTo(networkLayer);}}
 function spark(e){const max=Math.max(...e.series.map(p=>p.count),1),length=Math.max(1,e.end-e.start);return `<svg class="sparkline" viewBox="0 0 240 26" aria-hidden="true"><path d="${e.series.map((p,i)=>`${i?'L':'M'}${(p.t-e.start)/length*238+1},${24-p.count/max*20}`).join(' ')}" fill="none" stroke="#8a9b73" stroke-width="1.5"/></svg>`;}
+function orderedEvents(){const key=$('sort').value;return [...result.events].sort((a,b)=>key==='start'?a.start-b.start:b[key]-a[key]);}
 function renderList(){
- if(!result)return;const q=$('search').value.trim().toLocaleLowerCase('fr'),key=$('sort').value;
- const events=result.events.filter(e=>!q||`${e.id} ${title(e)} ${e.countries.map(country).join(' ')} ${e.countries.join(' ')} ${e.ids.map(s=>meta.stations[s].id).join(' ')}`.toLocaleLowerCase('fr').includes(q)).sort((a,b)=>key==='start'?a.start-b.start:b[key]-a[key]);
+ if(!result)return;const q=$('search').value.trim().toLocaleLowerCase('fr');
+ const events=orderedEvents().filter(e=>!q||`${e.id} ${title(e)} ${e.countries.map(country).join(' ')} ${e.countries.join(' ')} ${e.ids.map(s=>meta.stations[s].id).join(' ')}`.toLocaleLowerCase('fr').includes(q));
  $('event-count').textContent=events.length;
  $('events').innerHTML=events.length?events.map(e=>`<button class="event-card ${selected?.id===e.id?'selected':''}" data-event="${e.id}" aria-pressed="${selected?.id===e.id}"><div class="event-kicker"><span>CLUSTER ${String(e.id).padStart(2,'0')}</span><span>${e.branches} SÉPARATIONS</span></div><div class="event-title">${escape(title(e))}</div><div class="event-period">${timeLabel(e.start)} → ${timeLabel(e.end)}</div><div class="event-numbers"><span><strong>${fmt(e.ids.length)}</strong>balises distinctes</span><span><strong>${fmt(e.travel)} km</strong>déplacement</span><span><strong>${e.duration} h</strong>durée</span></div>${spark(e)}</button>`).join(''):`<div class="empty">Aucun cluster avec cette sélection. Réduisez la distance minimale, augmentez la sensibilité ou changez le filtre. Les mesures restent consultables.</div>`;
  for(const button of $('events').querySelectorAll('[data-event]'))button.onclick=()=>selectEvent(Number(button.dataset.event));
@@ -150,7 +151,7 @@ $('network').onclick=()=>{networkOn=!networkOn;$('network').setAttribute('aria-p
 $('time').oninput=()=>{stop();instant=Number($('time').value);renderTime();};$('previous').onclick=()=>{stop();instant=Math.max(Number($('time').min),instant-1);renderTime();};$('next').onclick=()=>{stop();instant=Math.min(Number($('time').max),instant+1);renderTime();};$('play').onclick=play;$('speed').onchange=()=>{if(timer){stop();play();}};
 $('station-select').onchange=()=>chooseStation(Number($('station-select').value));$('export').onclick=exportEvent;
 $('settings-open').onclick=()=>{$('settings-error').textContent='';$('settings').showModal();};$('method-open').onclick=()=>{$('method').showModal();};for(const b of document.querySelectorAll('[data-close]'))b.onclick=()=>$(b.dataset.close).close();
- $('reset').onclick=()=>{for(const [key,value] of Object.entries(defaults)){const control=$('settings-form').elements[key];if(control)control.value=value;}$('sensitivity').value='normal';};
+ $('reset').onclick=()=>{for(const [key,value] of Object.entries(defaults)){const control=$('settings-form').elements[key];if(control)control.value=value;}$('sensitivity').value='low';};
 function currentSettings(){const settings=Object.fromEntries([...new FormData($('settings-form'))].map(([k,v])=>[k,Number(v)])),presets={high:{z:3,minExcess:3},normal:{z:4,minExcess:5},low:{z:6,minExcess:10}};return Object.assign(settings,presets[$('sensitivity').value]);}
 $('settings-form').onsubmit=event=>{event.preventDefault();const settings=currentSettings();if(settings.minBaseline>settings.baselineHours||settings.baselineHours>=meta.T){$('settings-error').textContent='La période de référence doit être plus courte que le jeu de données et contenir le minimum d’heures demandé.';return;}recalculate(settings);};
 function setBusy(value){busy=value;$('settings-open').disabled=value||!meta;$('settings-form').querySelector('[type=submit]').disabled=value;for(const id of ['import-folder','source-select','online-dataset','load-online'])$(id).disabled=value;}
@@ -170,7 +171,7 @@ function updateDataset(){
 function displayResult(next){
  result=next;populateMethod();$('settings').close();$('criteria-note').textContent=`Au moins ${result.settings.minStations} balises par zone · déplacement ≥ ${result.settings.minTravel} km · durée ≥ ${result.settings.minHours} h`;
  notify(`${result.events.length} ${result.events.length===1?'cluster en déplacement retenu':'clusters en déplacement retenus'} sur ${result.allEvents.length} ensembles · ${fmt(result.zoneCount)} zones horaires · ${meta.missingLots.length} lots absents · ${(meta.invalidLots||[]).length} lots invalides exclus`);
- if(result.events.length)selectEvent(result.events[0].id);else{selected=null;eventLayer.clearLayers();currentLayer.clearLayers();renderList();instant=Math.min(meta.T-1,result.settings.baselineHours);renderTime();$('map-context').textContent='RÉSEAU IMPORTÉ';$('map-title').textContent='Aucun événement avec ces critères';$('timeline-title').textContent='Activité globale · ajustez les critères pour regrouper les écarts';$('event-facts').innerHTML='';$('lineage').innerHTML='';$('route-note').textContent='Aucun cluster satisfait ces critères de déplacement. Les mesures restent consultables.';$('station-select').innerHTML=meta.stations.map((s,i)=>`<option value="${i}">${escape(s.id)}</option>`).join('');chooseStation(0);}
+ if(result.events.length)selectEvent(orderedEvents()[0].id);else{selected=null;eventLayer.clearLayers();currentLayer.clearLayers();renderList();instant=Math.min(meta.T-1,result.settings.baselineHours);renderTime();$('map-context').textContent='RÉSEAU IMPORTÉ';$('map-title').textContent='Aucun événement avec ces critères';$('timeline-title').textContent='Activité globale · ajustez les critères pour regrouper les écarts';$('event-facts').innerHTML='';$('lineage').innerHTML='';$('route-note').textContent='Aucun cluster satisfait ces critères de déplacement. Les mesures restent consultables.';$('station-select').innerHTML=meta.stations.map((s,i)=>`<option value="${i}">${escape(s.id)}</option>`).join('');chooseStation(0);}
 }
 function bindWorker(target){target.onmessage=event=>{const m=event.data;if(m.request!==request)return;setBusy(false);if(m.type==='error'){$('settings-error').textContent=m.message;notify(m.message,true);return;}displayResult(m.result);};target.onerror=()=>{setBusy(false);notify('Le calcul a échoué. Rechargez les données ou ajustez les critères.',true);};}
 function clearDatasetView(){stop();selected=null;result=null;stationIndex=undefined;instant=0;eventLayer.clearLayers();currentLayer.clearLayers();networkLayer.clearLayers();$('search').value='';$('station-find').value='';$('lineage').innerHTML='';$('station-chart').innerHTML='';}
@@ -179,7 +180,7 @@ $('import-folder').onclick=()=>{$('folder-input').value='';$('folder-input').cli
 $('cancel-import').onclick=()=>{importWorker?.terminate();importFinished();$('import-status').textContent='Import annulé. Les données affichées sont conservées.';};
 $('folder-input').onchange=()=>{
  const files=[...$('folder-input').files];if(!files.length||busy)return;stop();setBusy(true);$('cancel-import').hidden=false;$('import-status').textContent='Lecture locale du manifeste et vérification des lots…';
- const candidate=new Worker('./worker.mjs?v=local-import-20261020',{type:'module'});importWorker=candidate;
+ const candidate=new Worker('./worker.mjs?v=defaults-20261020',{type:'module'});importWorker=candidate;
  candidate.onmessage=event=>{const m=event.data;if(importWorker!==candidate)return;
   if(m.type==='progress'){$('import-status').textContent=`Vérification : ${fmt(m.completed)} / ${fmt(m.total)} lots · ${fmt(m.observations)} observations lues${m.completed===m.total?' · calcul des événements…':''}`;return;}
   if(m.type==='error'){candidate.terminate();importFinished();$('import-status').textContent='Import non chargé : '+m.message;return;}
@@ -195,7 +196,7 @@ async function loadOnline(){
  try{const responses=await Promise.all([fetch(entry.meta),fetch(entry.values)]);if(responses.some(r=>!r.ok))throw new Error('Ce jeu en ligne est indisponible. Les données précédentes sont conservées.');
   const nextMeta=await responses[0].json(),nextValues=new Float64Array(await responses[1].arrayBuffer());validateHourly(nextMeta,nextValues);if(epoch!==sourceEpoch)return;
   nextMeta.sourceKind='online';nextMeta.datasetId=entry.id;nextMeta.datasetLabel=entry.label;
-  candidate=new Worker('./worker.mjs?v=online-catalogue-20261020',{type:'module'});$('import-status').textContent=`Calcul des événements : ${entry.label}…`;
+  candidate=new Worker('./worker.mjs?v=defaults-20261020',{type:'module'});$('import-status').textContent=`Calcul des événements : ${entry.label}…`;
   candidate.onmessage=event=>{const m=event.data;if(epoch!==sourceEpoch)return;if(m.type==='error'){candidate.terminate();setBusy(false);$('import-status').textContent=m.message;return;}
    worker?.terminate();worker=candidate;request=nextRequest;clearDatasetView();meta=nextMeta;values=nextValues;bindWorker(worker);updateDataset();displayResult(m.result);if(networkOn)drawNetwork();setBusy(false);$('import-status').textContent='Jeu disponible en ligne, analysé dans votre navigateur. Vous pouvez changer de période ou importer une collecte depuis votre ordinateur.';
   };

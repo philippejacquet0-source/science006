@@ -10,12 +10,12 @@ Réglages initiaux demandés :
 
 | Paramètre | Valeur |
 |---|---:|
-| Sensibilité | Moyenne : z = 4, excès minimal = 5 nSv/h |
+| Sensibilité | Faible : z = 6, excès minimal = 10 nSv/h |
 | Déplacement territorial minimal | 1 000 km |
-| Balises simultanées minimales par zone | 4 |
-| Distance entre balises voisines | 120 km |
-| Tolérance de liaison entre deux heures | 40 km |
-| Durée minimale de progression | 8 cases horaires |
+| Balises simultanées minimales par zone | 10 |
+| Distance entre balises voisines | 150 km |
+| Tolérance de liaison entre deux heures | 100 km |
+| Durée minimale de progression | 5 cases horaires |
 
 Les autres critères et leurs limites sont décrits dans [CLUSTERS.md](CLUSTERS.md). Lecture anime les zones ; le graphe montre leurs branches. Rechercher d'autres événements recalcule l'ensemble du réseau avec les nouveaux seuils. Filtrer par pays ou balise agit sur la liste des résultats. Afficher une balise ouvre sa courbe et, s'il est retenu, le cluster auquel elle appartient.
 
@@ -32,7 +32,7 @@ Le jeu le plus récent est chargé par défaut. La dernière heure de chaque pé
 
 `data/catalogue.json` décrit les jeux disponibles et leurs fichiers. Le jeu du 2–9 octobre conserve `data/meta.json` et `data/values.bin`. Celui du 13–20 octobre est dans `data/collections/2026-10-13_2026-10-20/`, avec une archive ZIP des lots et du manifeste final. Chaque `values.bin` est une matrice Float64, ordre balise puis heure ; les lacunes sont des NaN. Le protocole documente la référence, les seuils, les routes territoriales et les limites.
 
-Avec les réglages initiaux, le jeu du 2–9 octobre conserve le cluster contenant FR1191 : 2 747 balises dans 20 pays, jusqu'à 661 simultanément, et une route territoriale d'environ 1 044 km. Pour le 13–20 octobre, 495 zones horaires forment 59 ensembles, sans cluster satisfaisant le filtre de déplacement de 1 000 km. Ces résultats dépendent des seuils.
+Avec ces réglages, le jeu du 13–20 octobre produit 202 zones horaires et 11 ensembles temporels, dont deux satisfont le filtre de déplacement. Le classement initial est décroissant selon le déplacement net : cluster 2, environ 2 058 km (474 balises, 6 pays), puis cluster 1, environ 1 498 km (974 balises, 11 pays). Le cluster 2 est sélectionné à l'ouverture. Ces résultats dépendent des seuils et ne constituent pas une attribution physique.
 
 ## Collecte et hébergement
 

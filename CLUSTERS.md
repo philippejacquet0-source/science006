@@ -4,7 +4,7 @@ La recherche examine toutes les balises de l'instantané local. FR1191 n'est ni 
 
 ## Résultat sur le jeu du 2–9 octobre 2026
 
-Les réglages initiaux identifient 436 zones horaires, reliées en 57 ensembles temporels. Un ensemble satisfait les critères de déplacement. Le cluster 1 contient la variation de FR1191 le 7 octobre à 10 h UTC : il rassemble 2 747 balises dans 20 pays, avec au plus 661 balises simultanément retenues, du 6 octobre à 13 h au 9 octobre à 19 h UTC (79 cases horaires, dont la dernière partielle). Sa structure comporte 19 nœuds de séparation et 23 nœuds de fusion. Ces nombres décrivent la détection, et non un nombre établi de processus physiques.
+La configuration historique (sensibilité moyenne, voisinage 120 km, au moins 4 balises, liaison 40 km et progression 8 h) identifie 436 zones horaires, reliées en 57 ensembles temporels. Un ensemble satisfait les critères de déplacement. Le cluster 1 contient la variation de FR1191 le 7 octobre à 10 h UTC : il rassemble 2 747 balises dans 20 pays, avec au plus 661 balises simultanément retenues, du 6 octobre à 13 h au 9 octobre à 19 h UTC (79 cases horaires, dont la dernière partielle). Sa structure comporte 19 nœuds de séparation et 23 nœuds de fusion. Ces nombres décrivent la détection, et non un nombre établi de processus physiques. Les réglages par défaut ont été modifiés le 20 octobre ; les résultats historiques ci-dessus restent associés à leur configuration.
 
 Une route de nouveaux territoires activés va de 48,36° N, 4,76° O le 6 octobre à 13 h à 47,03° N, 9,07° E le 8 octobre à 09 h UTC. Son déplacement net est d'environ 1 044 km, pour une route d'environ 1 217 km. Elle appartient à l'ascendance temporelle des zones du cluster. Elle n'est pas une trajectoire mesurée de transport.
 
@@ -17,14 +17,14 @@ La commande Sensibilité choisit des critères descriptifs :
 | Sensibilité | Score robuste z | Excès absolu minimal |
 |---|---:|---:|
 | Haute | 3 | 3 nSv/h |
-| Moyenne, initiale | 4 | 5 nSv/h |
-| Faible | 6 | 10 nSv/h |
+| Moyenne | 4 | 5 nSv/h |
+| Faible, initiale | 6 | 10 nSv/h |
 
-Ce score n'est pas une probabilité, et ces seuils ne sont pas des tests de significativité. La référence courte, les dépendances temporelles et la recherche multiple limitent l'interprétation. Le plancher de variabilité implique, au réglage initial, un excès strictement supérieur à 6 nSv/h au minimum.
+Ce score n'est pas une probabilité, et ces seuils ne sont pas des tests de significativité. La référence courte, les dépendances temporelles et la recherche multiple limitent l'interprétation. Au réglage initial, l'excès doit atteindre au moins 10 nSv/h et dépasser six fois l'échelle de variabilité.
 
 ## 2. Zones simultanées
 
-À chaque heure, les balises actives sont reliées par une distance géodésique de voisinage de 120 km, réglable. Une composante contenant au moins quatre balises forme une zone. Cette distance est celle entre voisines, et non le rayon total de la zone : le chaînage peut produire une zone étendue.
+À chaque heure, les balises actives sont reliées par une distance géodésique de voisinage de 150 km, réglable. Une composante contenant au moins dix balises forme une zone. Cette distance est celle entre voisines, et non le rayon total de la zone : le chaînage peut produire une zone étendue.
 
 Les contours affichés sont des enveloppes convexes des balises actives. Ils peuvent englober des régions sans mesure. Une zone ne représente donc ni un champ interpolé de valeurs ni une surface contaminée. Les observations instrumentales restent accessibles séparément.
 
@@ -32,7 +32,7 @@ Les contours affichés sont des enveloppes convexes des balises actives. Ils peu
 
 Chaque emprise est résumée par des cellules approximatives de 50 km afin de limiter la domination des sites avec de nombreuses balises rapprochées. Le maillage utilise les latitudes et les longitudes converties approximativement en kilomètres ; les distances de liaison sont géodésiques. Les points des cellules sont les médianes des coordonnées instrumentées.
 
-Une cellule est proche de la zone suivante si au moins une cellule suivante se trouve à 40 km ou moins, tolérance réglable. Le lien requiert la proximité d'au moins 60 % des cellules d'au moins une des deux emprises. Si les zones ne partagent pas au moins deux balises, il requiert aussi au moins 20 % de l'autre emprise. Un bord isolé de deux grandes zones ne suffit donc pas à les réunir. Une emprise compacte peut néanmoins être liée à une partie d'une emprise plus grande, afin d'autoriser séparations et fusions.
+Une cellule est proche de la zone suivante si au moins une cellule suivante se trouve à 100 km ou moins, tolérance réglable. Le lien requiert la proximité d'au moins 60 % des cellules d'au moins une des deux emprises. Si les zones ne partagent pas au moins deux balises, il requiert aussi au moins 20 % de l'autre emprise. Un bord isolé de deux grandes zones ne suffit donc pas à les réunir. Une emprise compacte peut néanmoins être liée à une partie d'une emprise plus grande, afin d'autoriser séparations et fusions.
 
 Les liens sont orientés vers l'heure suivante. Un nœud avec plusieurs descendants décrit une séparation ; un nœud avec plusieurs parents décrit une fusion. Tous les nœuds d'une même composante temporelle conservent le même identifiant de cluster. Aucun lien ne franchit une heure entièrement absente de la chaîne ; aucune zone n'est interpolée.
 
@@ -46,7 +46,7 @@ Une grande emprise simultanée n'est pas assimilée à une migration. Pour chaqu
 - leur distance ne dépasse pas la tolérance de déplacement par heure multipliée par le délai ;
 - la zone du second territoire descend de la zone du premier dans le graphe temporel.
 
-On examine les routes de ce graphe acyclique. Pour chaque origine, le chemin de plus faible longueur géodésique vers chaque arrivée est utilisé. La cohérence est le rapport entre distance directe des extrémités et somme des distances des étapes. Une route admissible doit comporter au moins trois territoires activés à des heures différentes, durer au moins huit heures (nombre de cases inclusives), avec une cohérence d'au moins 0,55. Deux points seuls ne suffisent pas à qualifier une progression cohérente. Parmi ces routes, la plus grande distance nette est retenue pour filtrer le cluster ; cette distance doit atteindre 1 000 km au réglage initial. Le seuil de distance et la durée sont réglables. Un chemin plus long contenant davantage d'étapes n'est pas examiné si le plus court est trop peu documenté ; certains événements peuvent ainsi être manqués.
+On examine les routes de ce graphe acyclique. Pour chaque origine, le chemin de plus faible longueur géodésique vers chaque arrivée est utilisé. La cohérence est le rapport entre distance directe des extrémités et somme des distances des étapes. Une route admissible doit comporter au moins trois territoires activés à des heures différentes, durer au moins cinq heures (nombre de cases inclusives), avec une cohérence d'au moins 0,55. Deux points seuls ne suffisent pas à qualifier une progression cohérente. Parmi ces routes, la plus grande distance nette est retenue pour filtrer le cluster ; cette distance doit atteindre 1 000 km au réglage initial. Le seuil de distance et la durée sont réglables. Un chemin plus long contenant davantage d'étapes n'est pas examiné si le plus court est trop peu documenté ; certains événements peuvent ainsi être manqués.
 
 Les activations simultanées d'un territoire stationnaire ne peuvent pas produire une telle route. Cette mesure évite aussi de prendre les sauts du barycentre lors d'une séparation ou d'une fusion pour un déplacement. Elle peut cependant associer des recrutements successifs de territoires causés par des processus distincts. La première activation ne décrit pas un second passage dans une cellule déjà active ; les routes ne résument donc pas toute la dynamique d'un événement.
 
@@ -54,7 +54,7 @@ La tolérance de liaison est un paramètre de recherche, pas une vitesse physiqu
 
 ## 5. Lecture et recherche
 
-La liste présente tous les clusters satisfaisant les critères, classés initialement par activité totale, c'est-à-dire la somme des nombres de balises actives aux heures retenues. Ce classement ne qualifie ni une gravité ni une importance radiologique. Une recherche par pays, balise ou identifiant filtre la liste d'événements déjà calculés ; elle ne change pas l'identification globale.
+La liste présente tous les clusters satisfaisant les critères, classés initialement par déplacement net décroissant. Le premier de ce classement est sélectionné à l'ouverture et après recalcul. Le classement par activité totale reste disponible : il utilise la somme des nombres de balises actives aux heures retenues. Ces classements ne qualifient ni une gravité ni une importance radiologique. Une recherche par pays, balise ou identifiant filtre la liste d'événements déjà calculés ; elle ne change pas l'identification globale.
 
 Lecture parcourt les zones horaires et leurs branches. Début revient à la première heure de l'événement. Le graphe montre les séparations et fusions ; cliquer sur une zone affiche son heure sur la carte. Une recherche de balise dans le panneau des mesures ouvre son cluster retenu, s'il existe, et affiche son maximum mesuré dans les heures où elle participe aux zones. Cet outil de navigation n'impose aucun pic à la recherche globale.
 
@@ -62,7 +62,7 @@ Le dialogue Rechercher d'autres événements propose trois commandes principales
 
 ## Données et limites
 
-Le catalogue propose aussi le jeu du 13–20 octobre 2026, chargé par défaut : 5 955 balises, 966 761 observations, 1 192 lots valides sur 1 192 et une couverture horaire de 90,2 %. Ses 495 zones horaires forment 59 ensembles temporels ; aucun ne satisfait le filtre de déplacement de 1 000 km aux réglages initiaux. Les critères de recherche restent réglables. Le catalogue conserve les périodes séparées et ne les fusionne pas.
+Le jeu du 13–20 octobre 2026 est chargé par défaut : 5 955 balises, 966 761 observations, 1 192 lots valides sur 1 192 et une couverture horaire de 90,2 %. Avec la sensibilité faible, au moins 10 balises par zone, un voisinage de 150 km, une liaison horaire de 100 km, une progression minimale de 5 h et un déplacement minimal de 1 000 km, 202 zones horaires forment 11 ensembles temporels ; deux satisfont le filtre. Le tri initial place le cluster 2 (environ 2 058 km, 474 balises dans 6 pays) avant le cluster 1 (environ 1 498 km, 974 balises dans 11 pays). Les critères de recherche restent réglables. Le catalogue conserve les périodes séparées et ne les fusionne pas.
 
 Le bouton **Importer un dossier local** remplace les données de l'onglet par une collecte utilisateur, sans transmettre ses fichiers. Les événements sont recalculés avec les critères appliqués. La période, les effectifs et le bilan des lots se rapportent alors à ce dossier, et non à l'instantané ci-dessous. Voir [IMPORT.md](IMPORT.md) pour le format, les vérifications, les lacunes et les limites de l'import.
 

@@ -1,4 +1,4 @@
-import {clusterNetwork as analyse} from './cluster-engine.mjs';
+import {clusterNetwork as analyse} from './cluster-engine.mjs?v=defaults-20261020';
 import {importCollection} from './collection-import.mjs';
 let meta,values;
 self.onmessage=async event=>{const m=event.data;try{

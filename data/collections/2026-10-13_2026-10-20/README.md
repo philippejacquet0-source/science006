@@ -13,4 +13,4 @@ Période demandée : du 13 octobre 2026 à 00:00:00 UTC au 20 octobre à 11:53:3
 
 Préparation reproductible avec `node tools/prepare-hosted-dataset.mjs dossier-source data/collections/2026-10-13_2026-10-20`, en réutilisant le même validateur que l'import local. Tous les fichiers de la collecte sont vérifiés avant la création des moyennes horaires.
 
-Avec les critères initiaux de Bouffi (sensibilité moyenne, voisinage 120 km, 4 balises, liaison horaire 40 km, progression 8 h et déplacement minimal 1 000 km), 495 zones horaires forment 59 ensembles temporels ; aucun ne satisfait le filtre de déplacement. Ce résultat dépend des critères et n'attribue pas une cause aux variations.
+Avec les critères par défaut du 20 octobre (sensibilité faible, voisinage 150 km, 10 balises, liaison horaire 100 km, progression 5 h et déplacement minimal 1 000 km), 202 zones horaires forment 11 ensembles temporels ; deux satisfont le filtre. Le tri décroissant des déplacements place le cluster 2 (environ 2 058 km, 474 balises dans 6 pays) avant le cluster 1 (environ 1 498 km, 974 balises dans 11 pays). Ce résultat dépend des critères et n'attribue pas une cause aux variations.
