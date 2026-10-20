@@ -1,0 +1,439 @@
+<!doctype html>
+<html lang="fr"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Bouffi — Collecter les données REMAP</title>
+<style>body{font:16px/1.65 system-ui,sans-serif;max-width:820px;margin:30px auto;padding:0 22px 35px;background:#f5f5f0;color:#233b33}header{display:flex;align-items:center;justify-content:space-between;gap:20px;border-bottom:1px solid #d4ddd2;padding-bottom:18px}header strong{font:30px Georgia,serif}a{color:#254f49;text-underline-offset:3px}h1{font:38px/1.15 Georgia,serif;margin:28px 0 18px}h2{font:25px Georgia,serif;margin-top:32px}.bookmarklet{display:inline-block;padding:12px 18px;background:#203f3f;color:white;border-radius:6px;text-decoration:none}.note{font-size:14px;color:#66786d}.callout{border:1px solid #d5dfd0;border-radius:8px;background:#fff;padding:16px 20px}li{margin:10px 0}textarea{box-sizing:border-box;width:100%;height:260px;font:12px/1.5 monospace}nav{display:flex;gap:20px;flex-wrap:wrap}summary{cursor:pointer}</style></head><body>
+<header><strong>Bouffi</strong><nav><a href="../">← Les événements</a><a href="https://remap.jrc.ec.europa.eu/" target="_blank" rel="noopener noreferrer">Ouvrir REMAP ↗</a></nav></header>
+<h1>Collecter les données REMAP.</h1>
+<p>Le collecteur s'exécute dans votre onglet REMAP, après le passage manuel du CAPTCHA. Les fichiers sont enregistrés dans le dossier que vous choisissez. GitHub ne réalise aucune collecte.</p>
+<section class="callout"><h2 style="margin-top:0">Installer le favori de collecte</h2><p>Dans Chrome sur ordinateur, faites glisser ce lien vers votre barre de favoris :</p>
+<a class="bookmarklet" id="collector-bookmarklet" href="javascript:%2F*%20User-launched%20REMAP%20collector.%20Uses%20the%20already%20loaded%20client's%20API%20and%20transform.%0A%20*%20Experimental%3A%20network-wide%20collection%20has%20not%20yet%20been%20validated%20on%20REMAP.%0A%20*%2F%0A(()%20%3D%3E%20%7B%0A%20%20'use%20strict'%3B%0A%20%20if(location.hostname!%3D%3D'remap.jrc.ec.europa.eu'%7C%7C%2F%5C%2FConsent%5C%2F%2Fi.test(location.pathname))%7B%0A%20%20%20%20alert('Ouvrez%20la%20carte%20REMAP%20apr%C3%A8s%20votre%20passage%20manuel%20du%20CAPTCHA.')%3Breturn%3B%0A%20%20%7D%0A%20%20if(window.__remanenceCollector)%7Bwindow.__remanenceCollector.show()%3Breturn%3B%7D%0A%20%20const%20host%3Ddocument.createElement('div')%3B%0A%20%20host.style.cssText%3D'position%3Afixed%3Bright%3A16px%3Btop%3A16px%3Bz-index%3A2147483647'%3B%0A%20%20const%20root%3Dhost.attachShadow(%7Bmode%3A'open'%7D)%3B%0A%20%20root.innerHTML%3D%60%3Cstyle%3Esection%7Bfont%3A14px%20system-ui%3Bbackground%3Awhite%3Bcolor%3A%23193f48%3Bwidth%3A390px%3Bpadding%3A20px%3Bborder%3A1px%20solid%20%239aa%3Bborder-radius%3A12px%3Bbox-shadow%3A0%205px%2030px%20%230003%7Dh2%7Bmargin%3A0%200%2012px%3Bfont-size%3A19px%7Dp%7Bline-height%3A1.5%3Bfont-size%3A12px%7Dbutton%7Bfont%3Ainherit%3Bpadding%3A8px%3Bmargin%3A4px%3Bcursor%3Apointer%7Dpre%7Bwhite-space%3Apre-wrap%3Bfont-size%3A12px%3Bmax-height%3A200px%3Boverflow%3Aauto%7D%3C%2Fstyle%3E%3Csection%3E%3Ch2%3EBouffi%20%C2%B7%20collecte%20REMAP%3C%2Fh2%3E%3Cp%3ENouvelle%20collecte%20%3A%20p%C3%A9riode%20du%20curseur%20REMAP.%20Reprise%20%3A%20p%C3%A9riode%20du%20manifeste%20sauvegard%C3%A9%2C%20sans%20r%C3%A9glage%20du%20curseur.%3C%2Fp%3E%3Cp%3ELes%20requ%C3%AAtes%20restent%20successives.%20Le%20client%20REMAP%20assure%20l'authentification%20%3B%20un%20nouveau%20CAPTCHA%20reste%20manuel.%3C%2Fp%3E%3Cbutton%20id%3D%22load%22%3EReprendre%20un%20dossier%20existant%3C%2Fbutton%3E%3Cbutton%20id%3D%22pilot%22%3EPilote%20%C2%B7%202%20balises%3C%2Fbutton%3E%3Cbutton%20id%3D%22all%22%3ENouveau%20r%C3%A9seau%20complet%3C%2Fbutton%3E%3Cbutton%20id%3D%22pause%22%20disabled%3EPause%3C%2Fbutton%3E%3Cbutton%20id%3D%22resume%22%20disabled%3ED%C3%A9marrer%20%2F%20continuer%3C%2Fbutton%3E%3Cbutton%20id%3D%22close%22%3EFermer%3C%2Fbutton%3E%3Cpre%20id%3D%22status%22%3EPr%C3%AAt.%20Aucune%20requ%C3%AAte%20de%20collecte%20lanc%C3%A9e.%3C%2Fpre%3E%3C%2Fsection%3E%60%3B%0A%20%20document.documentElement.append(host)%3B%0A%20%20const%20ui%3Did%3D%3Eroot.getElementById(id)%3B%0A%20%20let%20running%3Dfalse%2Cpaused%3Dfalse%2Cclosing%3Dfalse%2Cstate%3Dnull%2Cdirectory%3Dnull%2Cclient%3Dnull%2CneedsReconcile%3Dfalse%3B%0A%20%20const%20report%3Dtext%3D%3E%7Bui('status').textContent%3Dtext%3B%7D%3B%0A%20%20function%20findClient()%7B%0A%20%20%20%20const%20seen%3Dnew%20Set()%2Ccandidates%3D%5B%5D%3B%0A%20%20%20%20const%20visit%3Dvm%3D%3E%7B%0A%20%20%20%20%20%20if(!vm%7C%7Cseen.has(vm))return%3Bseen.add(vm)%3B%0A%20%20%20%20%20%20if(vm.%24api%3F.getStationsDataBetween%26%26vm.%24api%3F.getStationsTimeseries%26%26vm.%24decrypt%3F.response%26%26vm.from%3F.clone%26%26vm.to%3F.clone%26%26typeof%20vm.type%3D%3D%3D'string')candidates.push(vm)%3B%0A%20%20%20%20%20%20for(const%20child%20of%20vm.%24children%7C%7C%5B%5D)visit(child)%3B%0A%20%20%20%20%7D%3B%0A%20%20%20%20for(const%20node%20of%20document.querySelectorAll('*'))if(node.__vue__)visit(node.__vue__.%24root%7C%7Cnode.__vue__)%3B%0A%20%20%20%20if(candidates.length!%3D%3D1)throw%20new%20Error(%60Client%20de%20carte%20attendu%20%3A%201%20%3B%20trouv%C3%A9%20%3A%20%24%7Bcandidates.length%7D.%20Aucune%20collecte%20lanc%C3%A9e.%60)%3B%0A%20%20%20%20return%20candidates%5B0%5D%3B%0A%20%20%7D%0A%20%20const%20stampOf%3Dresponse%3D%3E%7B%0A%20%20%20%20const%20key%3DNumber(response%3F.config%3F.headers%3F.stamp)%3B%0A%20%20%20%20if(!Number.isInteger(key)%7C%7Ckey%3C5%7C%7Ckey%3E1000)throw%20new%20Error('stamp%20absent%20ou%20invalide.%20R%C3%A9ponse%20refus%C3%A9e.')%3B%0A%20%20%20%20return%20key%3B%0A%20%20%7D%3B%0A%20%20async%20function%20readJSON(name)%7Btry%7Breturn%20JSON.parse(await%20(await%20(await%20directory.getFileHandle(name)).getFile()).text())%3B%7Dcatch(error)%7Bif(error.name%3D%3D%3D'NotFoundError')return%20undefined%3Bthrow%20error%3B%7D%7D%0A%20%20async%20function%20writeJSON(name%2Cvalue)%7Bconst%20file%3Dawait%20directory.getFileHandle(name%2C%7Bcreate%3Atrue%7D)%3Bconst%20stream%3Dawait%20file.createWritable()%3Btry%7Bawait%20stream.write(JSON.stringify(value))%3Bawait%20stream.close()%3B%7Dcatch(error)%7Btry%7Bawait%20stream.abort()%3B%7Dcatch%7B%7Dthrow%20error%3B%7D%7D%0A%20%20%2F%2F%20BEGIN%20RECOVERY%20CORE%20%E2%80%94%20also%20exercised%20directly%20by%20the%20local%20tests.%0A%20%20function%20validateSavedState(saved)%7B%0A%20%20%20%20if(saved%3F.format!%3D%3D'remanence-collection-v1'%7C%7C!%5B'pilot'%2C'all'%5D.includes(saved.mode)%7C%7C!Array.isArray(saved.stations)%7C%7C!saved.stations.length%7C%7C!Array.isArray(saved.completed)%7C%7C!Array.isArray(saved.errors))throw%20new%20Error('Manifeste%20incompatible.')%3B%0A%20%20%20%20const%20start%3DDate.parse(saved.start)%2Cend%3DDate.parse(saved.end)%3B%0A%20%20%20%20if(!Number.isFinite(start)%7C%7C!Number.isFinite(end)%7C%7Cend%3C%3Dstart)throw%20new%20Error('P%C3%A9riode%20du%20manifeste%20invalide.')%3B%0A%20%20%20%20const%20ids%3Dnew%20Set()%3B%0A%20%20%20%20for(const%20station%20of%20saved.stations)%7B%0A%20%20%20%20%20%20if(typeof%20station.id!%3D%3D'string'%7C%7C!station.id%7C%7C!%2F%5E%5B%5Cx20-%5Cx7e%5D%2B%24%2F.test(station.id)%7C%7Cids.has(station.id)%7C%7C!Number.isFinite(station.lat)%7C%7CMath.abs(station.lat)%3E90%7C%7C!Number.isFinite(station.lon)%7C%7CMath.abs(station.lon)%3E180)throw%20new%20Error('Inventaire%20sauvegard%C3%A9%20invalide.')%3B%0A%20%20%20%20%20%20ids.add(station.id)%3B%0A%20%20%20%20%7D%0A%20%20%20%20return%20saved%3B%0A%20%20%7D%0A%20%20function%20savedPlan(saved)%7B%0A%20%20%20%20validateSavedState(saved)%3B%0A%20%20%20%20const%20plan%3D%5B%5D%2Cend%3DDate.parse(saved.end)%2Cstep%3D7*24*3600000%3B%0A%20%20%20%20let%20w%3D0%3B%0A%20%20%20%20for(let%20start%3DDate.parse(saved.start)%3Bstart%3Cend%3Bstart%3DMath.min(start%2Bstep%2Cend)%2Cw%2B%2B)%7B%0A%20%20%20%20%20%20for(let%20offset%3D0%3Boffset%3Csaved.stations.length%3Boffset%2B%3D10)plan.push(%7Bid%3A%60w%24%7BString(w).padStart(2%2C'0')%7D-b%24%7BString(offset%2F10).padStart(4%2C'0')%7D%60%2Cstations%3Asaved.stations.slice(offset%2Coffset%2B10)%2Cstart%3Anew%20Date(start)%2Cend%3Anew%20Date(Math.min(start%2Bstep%2Cend))%7D)%3B%0A%20%20%20%20%7D%0A%20%20%20%20return%20plan%3B%0A%20%20%7D%0A%20%20function%20validateSavedPart(part%2Cjob)%7B%0A%20%20%20%20const%20p%3Dpart%3F.provenance%3B%0A%20%20%20%20if(part%3F.schema!%3D%3D'remanence-v1'%7C%7Cpart.synthetic!%3D%3Dfalse%7C%7Cpart.unit!%3D%3D'nSv%2Fh'%7C%7C!Array.isArray(part.observations)%7C%7C!Array.isArray(part.stations)%7C%7C!p%7C%7C!Array.isArray(p.requestedStations)%7C%7C!Array.isArray(p.missingSeries))throw%20new%20Error('Structure%20du%20lot%20invalide.')%3B%0A%20%20%20%20if(Date.parse(p.start)!%3D%3Djob.start.valueOf()%7C%7CDate.parse(p.endExclusive)!%3D%3Djob.end.valueOf())throw%20new%20Error('P%C3%A9riode%20du%20lot%20incoh%C3%A9rente.')%3B%0A%20%20%20%20if(!Number.isInteger(p.requestStamp)%7C%7Cp.requestStamp%3C5%7C%7Cp.requestStamp%3E1000)throw%20new%20Error('stamp%20du%20lot%20invalide.')%3B%0A%20%20%20%20const%20expected%3Djob.stations.map(s%3D%3Es.id)%2Crequested%3Dnew%20Set(p.requestedStations)%3B%0A%20%20%20%20if(p.requestedStations.length!%3D%3Dexpected.length%7C%7Crequested.size!%3D%3Dexpected.length%7C%7Cexpected.some(id%3D%3E!requested.has(id)))throw%20new%20Error('Balises%20demand%C3%A9es%20incoh%C3%A9rentes.')%3B%0A%20%20%20%20const%20metadata%3Dnew%20Map(job.stations.map(s%3D%3E%5Bs.id%2Cs%5D))%2CactualMetadata%3Dnew%20Set()%3B%0A%20%20%20%20for(const%20s%20of%20part.stations)%7Bconst%20original%3Dmetadata.get(s.id)%3Bif(!original%7C%7CactualMetadata.has(s.id)%7C%7Cs.lat!%3D%3Doriginal.lat%7C%7Cs.lon!%3D%3Doriginal.lon%7C%7Cs.country!%3D%3Doriginal.country%7C%7Cs.name!%3D%3Doriginal.name)throw%20new%20Error('M%C3%A9tadonn%C3%A9es%20du%20lot%20incoh%C3%A9rentes.')%3BactualMetadata.add(s.id)%3B%7D%0A%20%20%20%20const%20seen%3Dnew%20Set()%2Cpresent%3Dnew%20Set()%3B%0A%20%20%20%20for(const%20row%20of%20part.observations)%7B%0A%20%20%20%20%20%20const%20ms%3DDate.parse(row.time)%2Cid%3Drow.stationId%2B'%7C'%2Bms%3B%0A%20%20%20%20%20%20if(!requested.has(row.stationId)%7C%7C!actualMetadata.has(row.stationId)%7C%7C!Number.isFinite(ms)%7C%7Ctypeof%20row.time!%3D%3D'string'%7C%7C!%2F(Z%7C%5B%2B-%5D%5Cd%5Cd%3A%5Cd%5Cd)%24%2F.test(row.time)%7C%7Cms%3Cjob.start.valueOf()%7C%7Cms%3E%3Djob.end.valueOf()%7C%7C!Number.isFinite(row.value)%7C%7Cseen.has(id))throw%20new%20Error('Observation%20invalide%20ou%20dupliqu%C3%A9e.')%3B%0A%20%20%20%20%20%20seen.add(id)%3Bpresent.add(row.stationId)%3B%0A%20%20%20%20%7D%0A%20%20%20%20if(actualMetadata.size!%3D%3Dpresent.size)throw%20new%20Error('Balises%20sans%20observation%20dans%20les%20m%C3%A9tadonn%C3%A9es%20du%20lot.')%3B%0A%20%20%20%20const%20missing%3Dexpected.filter(id%3D%3E!present.has(id)).sort()%3B%0A%20%20%20%20if(JSON.stringify(missing)!%3D%3DJSON.stringify(%5B...p.missingSeries%5D.sort()))throw%20new%20Error('Absences%20de%20s%C3%A9ries%20incoh%C3%A9rentes.')%3B%0A%20%20%20%20return%20%7Bid%3Ajob.id%2Cfile%3Ajob.id%2B'.json'%2Crequested%3Aexpected.length%2Creturned%3Apresent.size%2Cobservations%3Apart.observations.length%2CmissingSeries%3Amissing%7D%3B%0A%20%20%7D%0A%20%20%2F%2F%20END%20RECOVERY%20CORE%0A%20%20function%20lockPreparation()%7Bfor(const%20id%20of%20%5B'pilot'%2C'all'%2C'load'%5D)ui(id).disabled%3Dtrue%3B%7D%0A%20%20async%20function%20reconcile()%7B%0A%20%20%20%20const%20plan%3Djobs()%2Ccompleted%3D%5B%5D%2Cinvalid%3D%5B%5D%2Cmissing%3D%5B%5D%3B%0A%20%20%20%20for(let%20index%3D0%3Bindex%3Cplan.length%3Bindex%2B%2B)%7B%0A%20%20%20%20%20%20if(closing)throw%20new%20Error('V%C3%A9rification%20interrompue.')%3B%0A%20%20%20%20%20%20const%20job%3Dplan%5Bindex%5D%2Cfilename%3Djob.id%2B'.json'%3B%0A%20%20%20%20%20%20if(index%2520%3D%3D%3D0)report(%60V%C3%A9rification%20locale%20%24%7Bindex%7D%2F%24%7Bplan.length%7D%20lots.%20Aucune%20requ%C3%AAte%20REMAP.%60)%3B%0A%20%20%20%20%20%20try%7B%0A%20%20%20%20%20%20%20%20const%20part%3Dawait%20readJSON(filename)%3B%0A%20%20%20%20%20%20%20%20if(part%3D%3D%3Dundefined)%7Bmissing.push(job.id)%3Bcontinue%3B%7D%0A%20%20%20%20%20%20%20%20completed.push(validateSavedPart(part%2Cjob))%3B%0A%20%20%20%20%20%20%7Dcatch(error)%7B%0A%20%20%20%20%20%20%20%20%2F%2F%20Preserve%20a%20malformed%20or%20inconsistent%20file%20before%20a%20future%20replacement.%0A%20%20%20%20%20%20%20%20let%20text%3B%0A%20%20%20%20%20%20%20%20try%7Btext%3Dawait%20(await%20(await%20directory.getFileHandle(filename)).getFile()).text()%3B%7Dcatch(readError)%7Bif(readError.name%3D%3D%3D'NotFoundError')%7Bmissing.push(job.id)%3Bcontinue%3B%7Dthrow%20readError%3B%7D%0A%20%20%20%20%20%20%20%20const%20backup%3Dfilename%2B'.invalid-'%2BDate.now()%2B'.txt'%3B%0A%20%20%20%20%20%20%20%20const%20stream%3Dawait%20(await%20directory.getFileHandle(backup%2C%7Bcreate%3Atrue%7D)).createWritable()%3B%0A%20%20%20%20%20%20%20%20try%7Bawait%20stream.write(text)%3Bawait%20stream.close()%3B%7Dcatch(writeError)%7Btry%7Bawait%20stream.abort()%3B%7Dcatch%7B%7Dthrow%20writeError%3B%7D%0A%20%20%20%20%20%20%20%20invalid.push(%7Bid%3Ajob.id%2Creason%3Aerror.message%2Cbackup%7D)%3B%0A%20%20%20%20%20%20%7D%0A%20%20%20%20%7D%0A%20%20%20%20state.completed%3Dcompleted%3Bstate.observations%3Dcompleted.reduce((total%2Citem)%3D%3Etotal%2Bitem.observations%2C0)%3Bstate.currentJob%3Dnull%3B%0A%20%20%20%20state.recovery%3D%7BcheckedAt%3Anew%20Date().toISOString()%2Cplanned%3Aplan.length%2Cvalid%3Acompleted.length%2Cmissing%3Amissing.length%2Cinvalid%7D%3B%0A%20%20%20%20state.collectionStatus%3Dcompleted.length%3D%3D%3Dplan.length%3F'finished'%3A'paused'%3B%0A%20%20%20%20await%20writeJSON('manifest.json'%2Cstate)%3BneedsReconcile%3Dfalse%3B%0A%20%20%20%20report(%60P%C3%A9riode%20sauvegard%C3%A9e%20%3A%20%24%7Bstate.start%7D%20%E2%86%92%20%24%7Bstate.end%7D%5Cn%24%7Bcompleted.length%7D%2F%24%7Bplan.length%7D%20lots%20valides%20%C2%B7%20%24%7Bstate.observations%7D%20observations%5Cn%24%7Bmissing.length%7D%20manquants%20%C2%B7%20%24%7Binvalid.length%7D%20invalides%20sauvegard%C3%A9s%5CnCliquez%20%C2%AB%20D%C3%A9marrer%20%2F%20continuer%20%C2%BB%20pour%20demander%20uniquement%20les%20lots%20restants.%60)%3B%0A%20%20%7D%0A%20%20async%20function%20loadExisting()%7B%0A%20%20%20%20if(running%7C%7Cstate)return%3B%0A%20%20%20%20try%7B%0A%20%20%20%20%20%20if(!window.showDirectoryPicker)throw%20new%20Error('Choix%20de%20dossier%20indisponible%20%3A%20utilisez%20Chrome%20sur%20ordinateur.')%3B%0A%20%20%20%20%20%20directory%3Dawait%20window.showDirectoryPicker(%7Bmode%3A'readwrite'%7D)%3B%0A%20%20%20%20%20%20const%20saved%3Dawait%20readJSON('manifest.json')%3BvalidateSavedState(saved)%3Bclient%3DfindClient()%3B%0A%20%20%20%20%20%20await%20writeJSON('manifest-before-resume-'%2BDate.now()%2B'.json'%2Csaved)%3B%0A%20%20%20%20%20%20state%3Dsaved%3BlockPreparation()%3BneedsReconcile%3Dtrue%3B%0A%20%20%20%20%20%20await%20reconcile()%3Bui('resume').disabled%3Dfalse%3B%0A%20%20%20%20%7Dcatch(error)%7Breport('Reprise%20non%20lanc%C3%A9e%20%3A%20'%2Berror.message)%3Bif(!state)%7Bdirectory%3Dnull%3Bclient%3Dnull%3B%7Delse%20ui('resume').disabled%3Dfalse%3B%7D%0A%20%20%7D%0A%20%20function%20metadata(rows)%7B%0A%20%20%20%20if(!Array.isArray(rows))throw%20new%20Error('Inventaire%20inattendu.')%3B%0A%20%20%20%20const%20seen%3Dnew%20Set()%3B%0A%20%20%20%20return%20rows.map(row%3D%3E%7B%0A%20%20%20%20%20%20if(typeof%20row.code!%3D%3D'string'%7C%7C!row.code%7C%7C!%2F%5E%5B%5Cx20-%5Cx7e%5D%2B%24%2F.test(row.code)%7C%7Cseen.has(row.code)%7C%7C!Number.isFinite(row.lat)%7C%7CMath.abs(row.lat)%3E90%7C%7C!Number.isFinite(row.long)%7C%7CMath.abs(row.long)%3E180)throw%20new%20Error('Inventaire%20incomplet%20ou%20incoh%C3%A9rent.')%3B%0A%20%20%20%20%20%20seen.add(row.code)%3Breturn%20%7Bid%3Arow.code%2Cname%3Arow.name%2Ccountry%3Arow.country%2Clat%3Arow.lat%2Clon%3Arow.long%7D%3B%0A%20%20%20%20%7D)%3B%0A%20%20%7D%0A%20%20async%20function%20prepare(mode)%7B%0A%20%20%20%20if(running%7C%7Cstate)return%3B%0A%20%20%20%20try%7B%0A%20%20%20%20%20%20if(!window.showDirectoryPicker)throw%20new%20Error('Choix%20de%20dossier%20indisponible%20%3A%20utilisez%20Chrome%20sur%20ordinateur.')%3B%0A%20%20%20%20%20%20%2F%2F%20The%20user%20explicitly%20selects%20and%20grants%20write%20access%20to%20the%20output%20folder.%0A%20%20%20%20%20%20const%20selected%3Dawait%20window.showDirectoryPicker(%7Bmode%3A'readwrite'%7D)%3B%0A%20%20%20%20%20%20client%3DfindClient()%3B%0A%20%20%20%20%20%20const%20end%3Dclient.to.clone().utc()%2Cstart%3Dclient.from.clone().utc()%3B%0A%20%20%20%20%20%20if(!start.isValid()%7C%7C!end.isValid()%7C%7C!start.isBefore(end))throw%20new%20Error('P%C3%A9riode%20du%20curseur%20invalide.')%3B%0A%20%20%20%20%20%20const%20key%3D%60remap-%24%7Bstart.format('YYYYMMDDHHmmss')%7D-%24%7Bend.format('YYYYMMDDHHmmss')%7D-%24%7Bmode%7D%60%3B%0A%20%20%20%20%20%20directory%3Dawait%20selected.getDirectoryHandle(key%2C%7Bcreate%3Atrue%7D)%3B%0A%20%20%20%20%20%20report('Lecture%20du%20plan%20de%20reprise%E2%80%A6')%3B%0A%20%20%20%20%20%20state%3Dawait%20readJSON('manifest.json')%3B%0A%20%20%20%20%20%20if(state)%7B%0A%20%20%20%20%20%20%20%20if(state.format!%3D%3D'remanence-collection-v1'%7C%7Cstate.start!%3D%3Dstart.toISOString()%7C%7Cstate.end!%3D%3Dend.toISOString()%7C%7Cstate.mode!%3D%3Dmode)throw%20new%20Error('Plan%20de%20reprise%20incompatible.')%3B%0A%20%20%20%20%20%20%20%20validateSavedState(state)%3Bawait%20writeJSON('manifest-before-resume-'%2BDate.now()%2B'.json'%2Cstate)%3BneedsReconcile%3Dtrue%3B%0A%20%20%20%20%20%20%7Delse%7B%0A%20%20%20%20%20%20%20%20report('Chargement%20de%20l%E2%80%99inventaire%20par%20le%20client%20REMAP%E2%80%A6')%3B%0A%20%20%20%20%20%20%20%20const%20response%3Dawait%20client.%24api.getStationsDataBetween(client.type%2Cstart.clone()%2Cend.clone())%3B%0A%20%20%20%20%20%20%20%20stampOf(response)%3B%0A%20%20%20%20%20%20%20%20const%20stations%3Dmetadata(client.%24decrypt.response(response%2C'code'%2C'country'%2C'lat'%2C'long'%2C'name'%2C'value'))%3B%0A%20%20%20%20%20%20%20%20if(!stations.length)throw%20new%20Error('Inventaire%20vide.')%3B%0A%20%20%20%20%20%20%20%20state%3D%7Bformat%3A'remanence-collection-v1'%2Cmode%2Cstart%3Astart.toISOString()%2Cend%3Aend.toISOString()%2CinventoryType%3Aclient.type%2CinventoryCount%3Astations.length%2Cstations%3Amode%3D%3D%3D'pilot'%3Fstations.slice(0%2C2)%3Astations%2Ccompleted%3A%5B%5D%2Cerrors%3A%5B%5D%2Cobservations%3A0%2CcollectionStatus%3A'prepared'%2CcreatedAt%3Anew%20Date().toISOString()%7D%3B%0A%20%20%20%20%20%20%20%20await%20writeJSON('manifest.json'%2Cstate)%3B%0A%20%20%20%20%20%20%7D%0A%20%20%20%20%20%20lockPreparation()%3B%0A%20%20%20%20%20%20ui('resume').disabled%3Dfalse%3B%0A%20%20%20%20%20%20if(needsReconcile)%7Bawait%20reconcile()%3Breturn%3B%7D%0A%20%20%20%20%20%20await%20collect()%3B%0A%20%20%20%20%7Dcatch(error)%7Breport('Collecte%20non%20lanc%C3%A9e%20ou%20interrompue%20%3A%20'%2Berror.message)%3Bif(!state)%7Bdirectory%3Dnull%3Bclient%3Dnull%3B%7D%7D%0A%20%20%7D%0A%20%20function%20jobs()%7B%0A%20%20%20%20const%20parse%3Ddate%3D%3Eclient.to.clone().utc().date(1).set(%7Byear%3Adate.getUTCFullYear()%2Cmonth%3Adate.getUTCMonth()%2Cdate%3Adate.getUTCDate()%2Chour%3Adate.getUTCHours()%2Cminute%3Adate.getUTCMinutes()%2Csecond%3Adate.getUTCSeconds()%2Cmillisecond%3Adate.getUTCMilliseconds()%7D)%3B%0A%20%20%20%20return%20savedPlan(state).map(job%3D%3E(%7B...job%2Cstart%3Aparse(job.start)%2Cend%3Aparse(job.end)%7D))%3B%0A%20%20%7D%0A%20%20async%20function%20collect()%7B%0A%20%20%20%20if(running%7C%7C!state)return%3B%0A%20%20%20%20running%3Dtrue%3Bpaused%3Dfalse%3Bui('pause').disabled%3Dfalse%3Bui('resume').disabled%3Dtrue%3B%0A%20%20%20%20state.collectionStatus%3D'running'%3B%0A%20%20%20%20try%7B%0A%20%20%20%20%20%20if(needsReconcile)await%20reconcile()%3B%0A%20%20%20%20%20%20const%20plan%3Djobs()%2Cdone%3Dnew%20Set(state.completed.map(item%3D%3Eitem.id))%3B%0A%20%20%20%20%20%20for(const%20job%20of%20plan)%7B%0A%20%20%20%20%20%20%20%20if(done.has(job.id))continue%3B%0A%20%20%20%20%20%20%20%20if(paused%7C%7Cclosing)break%3B%0A%20%20%20%20%20%20%20%20report(%60%24%7Bstate.mode%3D%3D%3D'pilot'%3F'Pilote'%3A'R%C3%A9seau'%7D%20%3A%20%24%7Bstate.stations.length%7D%20balises%20pr%C3%A9vues%5Cn%24%7Bdone.size%7D%2F%24%7Bplan.length%7D%20lots%20termin%C3%A9s%20%C2%B7%20%24%7Bstate.observations%7D%20observations%5CnRequ%C3%AAte%20%24%7Bjob.id%7D%60)%3B%0A%20%20%20%20%20%20%20%20state.currentJob%3Djob.id%3Bawait%20writeJSON('manifest.json'%2Cstate)%3B%0A%20%20%20%20%20%20%20%20const%20response%3Dawait%20client.%24api.getStationsTimeseries(job.stations.map(s%3D%3Es.id)%2Cjob.start.clone()%2Cjob.end.clone())%3B%0A%20%20%20%20%20%20%20%20if(response%3F.status!%3D%3D200)throw%20new%20Error('R%C3%A9ponse%20HTTP%20non%20exploitable.')%3B%0A%20%20%20%20%20%20%20%20const%20stamp%3DstampOf(response)%3B%0A%20%20%20%20%20%20%20%20const%20rows%3Dclient.%24decrypt.response(response%2C'code'%2C'value')%3B%0A%20%20%20%20%20%20%20%20if(!Array.isArray(rows))throw%20new%20Error('Structure%20de%20s%C3%A9rie%20inattendue.')%3B%0A%20%20%20%20%20%20%20%20const%20requested%3Dnew%20Set(job.stations.map(s%3D%3Es.id))%2Cseen%3Dnew%20Map()%2Cpresent%3Dnew%20Set()%3B%0A%20%20%20%20%20%20%20%20const%20observations%3D%5B%5D%3B%0A%20%20%20%20%20%20%20%20for(const%20row%20of%20rows)%7B%0A%20%20%20%20%20%20%20%20%20%20const%20ms%3DDate.parse(row.date)%3B%0A%20%20%20%20%20%20%20%20%20%20if(!requested.has(row.code)%7C%7C!Number.isFinite(ms)%7C%7C!%2F(Z%7C%5B%2B-%5D%5Cd%5Cd%3A%5Cd%5Cd)%24%2F.test(row.date)%7C%7C!Number.isFinite(row.value))throw%20new%20Error('Observation%20inattendue%20%3A%20lot%20refus%C3%A9.')%3B%0A%20%20%20%20%20%20%20%20%20%20%2F%2F%20Half-open%20windows%20avoid%20duplicating%20shared%20boundaries.%0A%20%20%20%20%20%20%20%20%20%20if(ms%3Cjob.start.valueOf()%7C%7Cms%3E%3Djob.end.valueOf())continue%3B%0A%20%20%20%20%20%20%20%20%20%20const%20id%3Drow.code%2B'%7C'%2Brow.date%3B%0A%20%20%20%20%20%20%20%20%20%20if(seen.has(id))%7Bif(seen.get(id)!%3D%3Drow.value)throw%20new%20Error('Doublon%20contradictoire.')%3Bcontinue%3B%7D%0A%20%20%20%20%20%20%20%20%20%20seen.set(id%2Crow.value)%3Bpresent.add(row.code)%3Bobservations.push(%7BstationId%3Arow.code%2Ctime%3Arow.date%2Cvalue%3Arow.value%7D)%3B%0A%20%20%20%20%20%20%20%20%7D%0A%20%20%20%20%20%20%20%20const%20filename%3Djob.id%2B'.json'%3B%0A%20%20%20%20%20%20%20%20await%20writeJSON(filename%2C%7Bschema%3A'remanence-v1'%2Cname%3A%60REMAP%20%24%7Bjob.id%7D%60%2Csynthetic%3Afalse%2Cunit%3A'nSv%2Fh'%2Cstations%3Ajob.stations.filter(s%3D%3Epresent.has(s.id))%2Cobservations%2Cprovenance%3A%7Bcollector%3A'experimental-client-api-v1'%2CrequestStamp%3Astamp%2CrequestedStations%3A%5B...requested%5D%2Cstart%3Ajob.start.toISOString()%2CendExclusive%3Ajob.end.toISOString()%2CmissingSeries%3A%5B...requested%5D.filter(code%3D%3E!present.has(code))%2CcapturedAt%3Anew%20Date().toISOString()%7D%7D)%3B%0A%20%20%20%20%20%20%20%20const%20item%3D%7Bid%3Ajob.id%2Cfile%3Afilename%2Crequested%3Arequested.size%2Creturned%3Apresent.size%2Cobservations%3Aobservations.length%2CmissingSeries%3A%5B...requested%5D.filter(code%3D%3E!present.has(code))%7D%3B%0A%20%20%20%20%20%20%20%20state.completed.push(item)%3Bstate.observations%2B%3Dobservations.length%3Bstate.currentJob%3Dnull%3Bdone.add(job.id)%3B%0A%20%20%20%20%20%20%20%20await%20writeJSON('manifest.json'%2Cstate)%3B%0A%20%20%20%20%20%20%20%20if(!paused%26%26!closing)await%20new%20Promise(resolve%3D%3EsetTimeout(resolve%2C3000))%3B%0A%20%20%20%20%20%20%7D%0A%20%20%20%20%20%20state.collectionStatus%3Ddone.size%3D%3D%3Dplan.length%3F'finished'%3A'paused'%3B%0A%20%20%20%20%20%20await%20writeJSON('manifest.json'%2Cstate)%3B%0A%20%20%20%20%20%20report(%60%24%7Bstate.collectionStatus%3D%3D%3D'finished'%3F'Collecte%20termin%C3%A9e'%3A'Collecte%20en%20pause'%7D%5Cn%24%7Bdone.size%7D%2F%24%7Bplan.length%7D%20lots%20%C2%B7%20%24%7Bstate.observations%7D%20observations%5CnLes%20balises%20sans%20s%C3%A9rie%20sont%20document%C3%A9es%20dans%20le%20manifeste.%20%C2%AB%20Termin%C3%A9%20%C2%BB%20ne%20signifie%20pas%20couverture%20compl%C3%A8te%20des%20mesures.%60)%3B%0A%20%20%20%20%7Dcatch(error)%7B%0A%20%20%20%20%20%20needsReconcile%3Dtrue%3B%0A%20%20%20%20%20%20state.collectionStatus%3D'error'%3Bstate.errors.push(%7Bjob%3Astate.currentJob%7C%7Cnull%2Cat%3Anew%20Date().toISOString()%2Cmessage%3Aerror.message%7D)%3B%0A%20%20%20%20%20%20try%7Bawait%20writeJSON('manifest.json'%2Cstate)%3B%7Dcatch%7B%7D%0A%20%20%20%20%20%20report('Arr%C3%AAt%20sur%20erreur%20%3A%20'%2Berror.message%2B'%5CnLes%20lots%20d%C3%A9j%C3%A0%20enregistr%C3%A9s%20sont%20conserv%C3%A9s.%20Reprendre%20ne%20relance%20que%20les%20lots%20non%20termin%C3%A9s.')%3B%0A%20%20%20%20%7Dfinally%7Brunning%3Dfalse%3Bui('pause').disabled%3Dtrue%3Bui('resume').disabled%3Dfalse%3Bif(closing)%7Bhost.remove()%3Bdelete%20window.__remanenceCollector%3B%7D%7D%0A%20%20%7D%0A%20%20ui('pilot').onclick%3D()%3D%3Eprepare('pilot')%3Bui('all').onclick%3D()%3D%3Eprepare('all')%3B%0A%20%20ui('load').onclick%3D()%3D%3EloadExisting()%3B%0A%20%20ui('pause').onclick%3D()%3D%3E%7Bpaused%3Dtrue%3Breport('Pause%20demand%C3%A9e.%20La%20requ%C3%AAte%20en%20cours%20peut%20terminer%20%3B%20aucun%20lot%20suivant%20ne%20sera%20lanc%C3%A9.')%3B%7D%3B%0A%20%20ui('resume').onclick%3D()%3D%3Ecollect()%3B%0A%20%20ui('close').onclick%3D()%3D%3E%7Bclosing%3Dpaused%3Dtrue%3Bif(!running)%7Bhost.remove()%3Bdelete%20window.__remanenceCollector%3B%7Delse%20report('Fermeture%20apr%C3%A8s%20la%20requ%C3%AAte%20en%20cours.')%3B%7D%3B%0A%20%20window.__remanenceCollector%3D%7Bshow%3A()%3D%3E%7Bhost.style.display%3D'block'%3B%7D%7D%3B%0A%7D)()%3B%0A">Bouffi · collecteur REMAP</a>
+<p class="note">Lancez ensuite ce favori depuis la carte REMAP. Il ne démarre pas depuis cette page. Si le glisser-déposer n'est pas disponible, créez un favori et copiez le code du favori dans son adresse.</p>
+<details><summary>Copier le code du favori</summary><textarea readonly aria-label="Code du favori de collecte">javascript:/* User-launched REMAP collector. Uses the already loaded client's API and transform.
+ * Experimental: network-wide collection has not yet been validated on REMAP.
+ */
+(() =&gt; {
+  'use strict';
+  if(location.hostname!=='remap.jrc.ec.europa.eu'||/\/Consent\//i.test(location.pathname)){
+    alert('Ouvrez la carte REMAP après votre passage manuel du CAPTCHA.');return;
+  }
+  if(window.__remanenceCollector){window.__remanenceCollector.show();return;}
+  const host=document.createElement('div');
+  host.style.cssText='position:fixed;right:16px;top:16px;z-index:2147483647';
+  const root=host.attachShadow({mode:'open'});
+  root.innerHTML=`&lt;style&gt;section{font:14px system-ui;background:white;color:#193f48;width:390px;padding:20px;border:1px solid #9aa;border-radius:12px;box-shadow:0 5px 30px #0003}h2{margin:0 0 12px;font-size:19px}p{line-height:1.5;font-size:12px}button{font:inherit;padding:8px;margin:4px;cursor:pointer}pre{white-space:pre-wrap;font-size:12px;max-height:200px;overflow:auto}&lt;/style&gt;&lt;section&gt;&lt;h2&gt;Bouffi · collecte REMAP&lt;/h2&gt;&lt;p&gt;Nouvelle collecte : période du curseur REMAP. Reprise : période du manifeste sauvegardé, sans réglage du curseur.&lt;/p&gt;&lt;p&gt;Les requêtes restent successives. Le client REMAP assure l'authentification ; un nouveau CAPTCHA reste manuel.&lt;/p&gt;&lt;button id=&quot;load&quot;&gt;Reprendre un dossier existant&lt;/button&gt;&lt;button id=&quot;pilot&quot;&gt;Pilote · 2 balises&lt;/button&gt;&lt;button id=&quot;all&quot;&gt;Nouveau réseau complet&lt;/button&gt;&lt;button id=&quot;pause&quot; disabled&gt;Pause&lt;/button&gt;&lt;button id=&quot;resume&quot; disabled&gt;Démarrer / continuer&lt;/button&gt;&lt;button id=&quot;close&quot;&gt;Fermer&lt;/button&gt;&lt;pre id=&quot;status&quot;&gt;Prêt. Aucune requête de collecte lancée.&lt;/pre&gt;&lt;/section&gt;`;
+  document.documentElement.append(host);
+  const ui=id=&gt;root.getElementById(id);
+  let running=false,paused=false,closing=false,state=null,directory=null,client=null,needsReconcile=false;
+  const report=text=&gt;{ui('status').textContent=text;};
+  function findClient(){
+    const seen=new Set(),candidates=[];
+    const visit=vm=&gt;{
+      if(!vm||seen.has(vm))return;seen.add(vm);
+      if(vm.$api?.getStationsDataBetween&amp;&amp;vm.$api?.getStationsTimeseries&amp;&amp;vm.$decrypt?.response&amp;&amp;vm.from?.clone&amp;&amp;vm.to?.clone&amp;&amp;typeof vm.type==='string')candidates.push(vm);
+      for(const child of vm.$children||[])visit(child);
+    };
+    for(const node of document.querySelectorAll('*'))if(node.__vue__)visit(node.__vue__.$root||node.__vue__);
+    if(candidates.length!==1)throw new Error(`Client de carte attendu : 1 ; trouvé : ${candidates.length}. Aucune collecte lancée.`);
+    return candidates[0];
+  }
+  const stampOf=response=&gt;{
+    const key=Number(response?.config?.headers?.stamp);
+    if(!Number.isInteger(key)||key&lt;5||key&gt;1000)throw new Error('stamp absent ou invalide. Réponse refusée.');
+    return key;
+  };
+  async function readJSON(name){try{return JSON.parse(await (await (await directory.getFileHandle(name)).getFile()).text());}catch(error){if(error.name==='NotFoundError')return undefined;throw error;}}
+  async function writeJSON(name,value){const file=await directory.getFileHandle(name,{create:true});const stream=await file.createWritable();try{await stream.write(JSON.stringify(value));await stream.close();}catch(error){try{await stream.abort();}catch{}throw error;}}
+  // BEGIN RECOVERY CORE — also exercised directly by the local tests.
+  function validateSavedState(saved){
+    if(saved?.format!=='remanence-collection-v1'||!['pilot','all'].includes(saved.mode)||!Array.isArray(saved.stations)||!saved.stations.length||!Array.isArray(saved.completed)||!Array.isArray(saved.errors))throw new Error('Manifeste incompatible.');
+    const start=Date.parse(saved.start),end=Date.parse(saved.end);
+    if(!Number.isFinite(start)||!Number.isFinite(end)||end&lt;=start)throw new Error('Période du manifeste invalide.');
+    const ids=new Set();
+    for(const station of saved.stations){
+      if(typeof station.id!=='string'||!station.id||!/^[\x20-\x7e]+$/.test(station.id)||ids.has(station.id)||!Number.isFinite(station.lat)||Math.abs(station.lat)&gt;90||!Number.isFinite(station.lon)||Math.abs(station.lon)&gt;180)throw new Error('Inventaire sauvegardé invalide.');
+      ids.add(station.id);
+    }
+    return saved;
+  }
+  function savedPlan(saved){
+    validateSavedState(saved);
+    const plan=[],end=Date.parse(saved.end),step=7*24*3600000;
+    let w=0;
+    for(let start=Date.parse(saved.start);start&lt;end;start=Math.min(start+step,end),w++){
+      for(let offset=0;offset&lt;saved.stations.length;offset+=10)plan.push({id:`w${String(w).padStart(2,'0')}-b${String(offset/10).padStart(4,'0')}`,stations:saved.stations.slice(offset,offset+10),start:new Date(start),end:new Date(Math.min(start+step,end))});
+    }
+    return plan;
+  }
+  function validateSavedPart(part,job){
+    const p=part?.provenance;
+    if(part?.schema!=='remanence-v1'||part.synthetic!==false||part.unit!=='nSv/h'||!Array.isArray(part.observations)||!Array.isArray(part.stations)||!p||!Array.isArray(p.requestedStations)||!Array.isArray(p.missingSeries))throw new Error('Structure du lot invalide.');
+    if(Date.parse(p.start)!==job.start.valueOf()||Date.parse(p.endExclusive)!==job.end.valueOf())throw new Error('Période du lot incohérente.');
+    if(!Number.isInteger(p.requestStamp)||p.requestStamp&lt;5||p.requestStamp&gt;1000)throw new Error('stamp du lot invalide.');
+    const expected=job.stations.map(s=&gt;s.id),requested=new Set(p.requestedStations);
+    if(p.requestedStations.length!==expected.length||requested.size!==expected.length||expected.some(id=&gt;!requested.has(id)))throw new Error('Balises demandées incohérentes.');
+    const metadata=new Map(job.stations.map(s=&gt;[s.id,s])),actualMetadata=new Set();
+    for(const s of part.stations){const original=metadata.get(s.id);if(!original||actualMetadata.has(s.id)||s.lat!==original.lat||s.lon!==original.lon||s.country!==original.country||s.name!==original.name)throw new Error('Métadonnées du lot incohérentes.');actualMetadata.add(s.id);}
+    const seen=new Set(),present=new Set();
+    for(const row of part.observations){
+      const ms=Date.parse(row.time),id=row.stationId+'|'+ms;
+      if(!requested.has(row.stationId)||!actualMetadata.has(row.stationId)||!Number.isFinite(ms)||typeof row.time!=='string'||!/(Z|[+-]\d\d:\d\d)$/.test(row.time)||ms&lt;job.start.valueOf()||ms&gt;=job.end.valueOf()||!Number.isFinite(row.value)||seen.has(id))throw new Error('Observation invalide ou dupliquée.');
+      seen.add(id);present.add(row.stationId);
+    }
+    if(actualMetadata.size!==present.size)throw new Error('Balises sans observation dans les métadonnées du lot.');
+    const missing=expected.filter(id=&gt;!present.has(id)).sort();
+    if(JSON.stringify(missing)!==JSON.stringify([...p.missingSeries].sort()))throw new Error('Absences de séries incohérentes.');
+    return {id:job.id,file:job.id+'.json',requested:expected.length,returned:present.size,observations:part.observations.length,missingSeries:missing};
+  }
+  // END RECOVERY CORE
+  function lockPreparation(){for(const id of ['pilot','all','load'])ui(id).disabled=true;}
+  async function reconcile(){
+    const plan=jobs(),completed=[],invalid=[],missing=[];
+    for(let index=0;index&lt;plan.length;index++){
+      if(closing)throw new Error('Vérification interrompue.');
+      const job=plan[index],filename=job.id+'.json';
+      if(index%20===0)report(`Vérification locale ${index}/${plan.length} lots. Aucune requête REMAP.`);
+      try{
+        const part=await readJSON(filename);
+        if(part===undefined){missing.push(job.id);continue;}
+        completed.push(validateSavedPart(part,job));
+      }catch(error){
+        // Preserve a malformed or inconsistent file before a future replacement.
+        let text;
+        try{text=await (await (await directory.getFileHandle(filename)).getFile()).text();}catch(readError){if(readError.name==='NotFoundError'){missing.push(job.id);continue;}throw readError;}
+        const backup=filename+'.invalid-'+Date.now()+'.txt';
+        const stream=await (await directory.getFileHandle(backup,{create:true})).createWritable();
+        try{await stream.write(text);await stream.close();}catch(writeError){try{await stream.abort();}catch{}throw writeError;}
+        invalid.push({id:job.id,reason:error.message,backup});
+      }
+    }
+    state.completed=completed;state.observations=completed.reduce((total,item)=&gt;total+item.observations,0);state.currentJob=null;
+    state.recovery={checkedAt:new Date().toISOString(),planned:plan.length,valid:completed.length,missing:missing.length,invalid};
+    state.collectionStatus=completed.length===plan.length?'finished':'paused';
+    await writeJSON('manifest.json',state);needsReconcile=false;
+    report(`Période sauvegardée : ${state.start} → ${state.end}\n${completed.length}/${plan.length} lots valides · ${state.observations} observations\n${missing.length} manquants · ${invalid.length} invalides sauvegardés\nCliquez « Démarrer / continuer » pour demander uniquement les lots restants.`);
+  }
+  async function loadExisting(){
+    if(running||state)return;
+    try{
+      if(!window.showDirectoryPicker)throw new Error('Choix de dossier indisponible : utilisez Chrome sur ordinateur.');
+      directory=await window.showDirectoryPicker({mode:'readwrite'});
+      const saved=await readJSON('manifest.json');validateSavedState(saved);client=findClient();
+      await writeJSON('manifest-before-resume-'+Date.now()+'.json',saved);
+      state=saved;lockPreparation();needsReconcile=true;
+      await reconcile();ui('resume').disabled=false;
+    }catch(error){report('Reprise non lancée : '+error.message);if(!state){directory=null;client=null;}else ui('resume').disabled=false;}
+  }
+  function metadata(rows){
+    if(!Array.isArray(rows))throw new Error('Inventaire inattendu.');
+    const seen=new Set();
+    return rows.map(row=&gt;{
+      if(typeof row.code!=='string'||!row.code||!/^[\x20-\x7e]+$/.test(row.code)||seen.has(row.code)||!Number.isFinite(row.lat)||Math.abs(row.lat)&gt;90||!Number.isFinite(row.long)||Math.abs(row.long)&gt;180)throw new Error('Inventaire incomplet ou incohérent.');
+      seen.add(row.code);return {id:row.code,name:row.name,country:row.country,lat:row.lat,lon:row.long};
+    });
+  }
+  async function prepare(mode){
+    if(running||state)return;
+    try{
+      if(!window.showDirectoryPicker)throw new Error('Choix de dossier indisponible : utilisez Chrome sur ordinateur.');
+      // The user explicitly selects and grants write access to the output folder.
+      const selected=await window.showDirectoryPicker({mode:'readwrite'});
+      client=findClient();
+      const end=client.to.clone().utc(),start=client.from.clone().utc();
+      if(!start.isValid()||!end.isValid()||!start.isBefore(end))throw new Error('Période du curseur invalide.');
+      const key=`remap-${start.format('YYYYMMDDHHmmss')}-${end.format('YYYYMMDDHHmmss')}-${mode}`;
+      directory=await selected.getDirectoryHandle(key,{create:true});
+      report('Lecture du plan de reprise…');
+      state=await readJSON('manifest.json');
+      if(state){
+        if(state.format!=='remanence-collection-v1'||state.start!==start.toISOString()||state.end!==end.toISOString()||state.mode!==mode)throw new Error('Plan de reprise incompatible.');
+        validateSavedState(state);await writeJSON('manifest-before-resume-'+Date.now()+'.json',state);needsReconcile=true;
+      }else{
+        report('Chargement de l’inventaire par le client REMAP…');
+        const response=await client.$api.getStationsDataBetween(client.type,start.clone(),end.clone());
+        stampOf(response);
+        const stations=metadata(client.$decrypt.response(response,'code','country','lat','long','name','value'));
+        if(!stations.length)throw new Error('Inventaire vide.');
+        state={format:'remanence-collection-v1',mode,start:start.toISOString(),end:end.toISOString(),inventoryType:client.type,inventoryCount:stations.length,stations:mode==='pilot'?stations.slice(0,2):stations,completed:[],errors:[],observations:0,collectionStatus:'prepared',createdAt:new Date().toISOString()};
+        await writeJSON('manifest.json',state);
+      }
+      lockPreparation();
+      ui('resume').disabled=false;
+      if(needsReconcile){await reconcile();return;}
+      await collect();
+    }catch(error){report('Collecte non lancée ou interrompue : '+error.message);if(!state){directory=null;client=null;}}
+  }
+  function jobs(){
+    const parse=date=&gt;client.to.clone().utc().date(1).set({year:date.getUTCFullYear(),month:date.getUTCMonth(),date:date.getUTCDate(),hour:date.getUTCHours(),minute:date.getUTCMinutes(),second:date.getUTCSeconds(),millisecond:date.getUTCMilliseconds()});
+    return savedPlan(state).map(job=&gt;({...job,start:parse(job.start),end:parse(job.end)}));
+  }
+  async function collect(){
+    if(running||!state)return;
+    running=true;paused=false;ui('pause').disabled=false;ui('resume').disabled=true;
+    state.collectionStatus='running';
+    try{
+      if(needsReconcile)await reconcile();
+      const plan=jobs(),done=new Set(state.completed.map(item=&gt;item.id));
+      for(const job of plan){
+        if(done.has(job.id))continue;
+        if(paused||closing)break;
+        report(`${state.mode==='pilot'?'Pilote':'Réseau'} : ${state.stations.length} balises prévues\n${done.size}/${plan.length} lots terminés · ${state.observations} observations\nRequête ${job.id}`);
+        state.currentJob=job.id;await writeJSON('manifest.json',state);
+        const response=await client.$api.getStationsTimeseries(job.stations.map(s=&gt;s.id),job.start.clone(),job.end.clone());
+        if(response?.status!==200)throw new Error('Réponse HTTP non exploitable.');
+        const stamp=stampOf(response);
+        const rows=client.$decrypt.response(response,'code','value');
+        if(!Array.isArray(rows))throw new Error('Structure de série inattendue.');
+        const requested=new Set(job.stations.map(s=&gt;s.id)),seen=new Map(),present=new Set();
+        const observations=[];
+        for(const row of rows){
+          const ms=Date.parse(row.date);
+          if(!requested.has(row.code)||!Number.isFinite(ms)||!/(Z|[+-]\d\d:\d\d)$/.test(row.date)||!Number.isFinite(row.value))throw new Error('Observation inattendue : lot refusé.');
+          // Half-open windows avoid duplicating shared boundaries.
+          if(ms&lt;job.start.valueOf()||ms&gt;=job.end.valueOf())continue;
+          const id=row.code+'|'+row.date;
+          if(seen.has(id)){if(seen.get(id)!==row.value)throw new Error('Doublon contradictoire.');continue;}
+          seen.set(id,row.value);present.add(row.code);observations.push({stationId:row.code,time:row.date,value:row.value});
+        }
+        const filename=job.id+'.json';
+        await writeJSON(filename,{schema:'remanence-v1',name:`REMAP ${job.id}`,synthetic:false,unit:'nSv/h',stations:job.stations.filter(s=&gt;present.has(s.id)),observations,provenance:{collector:'experimental-client-api-v1',requestStamp:stamp,requestedStations:[...requested],start:job.start.toISOString(),endExclusive:job.end.toISOString(),missingSeries:[...requested].filter(code=&gt;!present.has(code)),capturedAt:new Date().toISOString()}});
+        const item={id:job.id,file:filename,requested:requested.size,returned:present.size,observations:observations.length,missingSeries:[...requested].filter(code=&gt;!present.has(code))};
+        state.completed.push(item);state.observations+=observations.length;state.currentJob=null;done.add(job.id);
+        await writeJSON('manifest.json',state);
+        if(!paused&amp;&amp;!closing)await new Promise(resolve=&gt;setTimeout(resolve,3000));
+      }
+      state.collectionStatus=done.size===plan.length?'finished':'paused';
+      await writeJSON('manifest.json',state);
+      report(`${state.collectionStatus==='finished'?'Collecte terminée':'Collecte en pause'}\n${done.size}/${plan.length} lots · ${state.observations} observations\nLes balises sans série sont documentées dans le manifeste. « Terminé » ne signifie pas couverture complète des mesures.`);
+    }catch(error){
+      needsReconcile=true;
+      state.collectionStatus='error';state.errors.push({job:state.currentJob||null,at:new Date().toISOString(),message:error.message});
+      try{await writeJSON('manifest.json',state);}catch{}
+      report('Arrêt sur erreur : '+error.message+'\nLes lots déjà enregistrés sont conservés. Reprendre ne relance que les lots non terminés.');
+    }finally{running=false;ui('pause').disabled=true;ui('resume').disabled=false;if(closing){host.remove();delete window.__remanenceCollector;}}
+  }
+  ui('pilot').onclick=()=&gt;prepare('pilot');ui('all').onclick=()=&gt;prepare('all');
+  ui('load').onclick=()=&gt;loadExisting();
+  ui('pause').onclick=()=&gt;{paused=true;report('Pause demandée. La requête en cours peut terminer ; aucun lot suivant ne sera lancé.');};
+  ui('resume').onclick=()=&gt;collect();
+  ui('close').onclick=()=&gt;{closing=paused=true;if(!running){host.remove();delete window.__remanenceCollector;}else report('Fermeture après la requête en cours.');};
+  window.__remanenceCollector={show:()=&gt;{host.style.display='block';}};
+})();
+</textarea></details></section>
+<h2>Nouvelle collecte</h2><ol><li>Ouvrez <a href="https://remap.jrc.ec.europa.eu/" target="_blank" rel="noopener noreferrer">REMAP</a>, passez vous-même le CAPTCHA et accédez à la carte.</li><li>Réglez la période avec le curseur REMAP, puis lancez le favori « Bouffi · collecteur REMAP ».</li><li>Choisissez « Pilote · 2 balises » pour vérifier l'accès, ou « Nouveau réseau complet », puis un dossier de sauvegarde. Le plan de collecte est alors figé.</li></ol>
+<h2>Reprendre une collecte interrompue</h2><ol><li>Installez ce favori à la place de l'ancien. Fermez l'ancien panneau de collecte ; si une requête reste bloquée, rechargez REMAP et repassez manuellement le CAPTCHA si demandé.</li><li>Lancez le favori, puis cliquez sur « Reprendre un dossier existant ».</li><li>Sélectionnez directement le dossier contenant <code>manifest.json</code> et les lots, et non son dossier parent.</li><li>Attendez la vérification locale, puis cliquez sur « Démarrer / continuer ».</li></ol>
+<p>La période et les balises viennent du manifeste sauvegardé ; le curseur REMAP n'a pas besoin d'être replacé. Les lots valides sont conservés sans nouvelle requête. Les lots absents ou invalides sont demandés à nouveau ; les fichiers invalides sont copiés avant remplacement. Une copie du manifeste précédent est conservée.</p>
+<h2>Fonctionnement et limites</h2><p>Les requêtes sont successives, par lots de dix balises et fenêtres de sept jours au plus, avec une pause de trois secondes entre les lots. Ces paramètres ne sont pas des limites officielles du service. Pause et Fermer interviennent après la requête en cours. Une expiration de session peut imposer un nouveau CAPTCHA, qui reste manuel.</p>
+<p>Les intervalles sont semi-ouverts. Les absences ne sont pas remplacées par des zéros. Le manifeste distingue les lots terminés, les balises sans série et les erreurs. Un lot validé localement ne prouve pas la disponibilité de toutes les mesures côté service.</p>
+<p class="note">Cet outil est celui préparé pour la collecte de l'instantané utilisé par Bouffi. La vérification locale de reprise a porté sur 469 lots d'une collecte réelle interrompue ; son exécution après relancement dans Chrome reste à vérifier. Le collecteur dépend du client REMAP chargé et peut cesser de fonctionner si celui-ci évolue. Les nouveaux fichiers ne sont pas ajoutés automatiquement à l'instantané affiché par Bouffi.</p>
+<p>L'authentification reste dans le client REMAP. Aucun jeton ni cookie n'est exporté. <a href="./remap-collector.js" download>Télécharger le script autonome</a>.</p>
+<details><summary>Code source autonome</summary><textarea readonly aria-label="Code source du collecteur">/* User-launched REMAP collector. Uses the already loaded client's API and transform.
+ * Experimental: network-wide collection has not yet been validated on REMAP.
+ */
+(() =&gt; {
+  'use strict';
+  if(location.hostname!=='remap.jrc.ec.europa.eu'||/\/Consent\//i.test(location.pathname)){
+    alert('Ouvrez la carte REMAP après votre passage manuel du CAPTCHA.');return;
+  }
+  if(window.__remanenceCollector){window.__remanenceCollector.show();return;}
+  const host=document.createElement('div');
+  host.style.cssText='position:fixed;right:16px;top:16px;z-index:2147483647';
+  const root=host.attachShadow({mode:'open'});
+  root.innerHTML=`&lt;style&gt;section{font:14px system-ui;background:white;color:#193f48;width:390px;padding:20px;border:1px solid #9aa;border-radius:12px;box-shadow:0 5px 30px #0003}h2{margin:0 0 12px;font-size:19px}p{line-height:1.5;font-size:12px}button{font:inherit;padding:8px;margin:4px;cursor:pointer}pre{white-space:pre-wrap;font-size:12px;max-height:200px;overflow:auto}&lt;/style&gt;&lt;section&gt;&lt;h2&gt;Bouffi · collecte REMAP&lt;/h2&gt;&lt;p&gt;Nouvelle collecte : période du curseur REMAP. Reprise : période du manifeste sauvegardé, sans réglage du curseur.&lt;/p&gt;&lt;p&gt;Les requêtes restent successives. Le client REMAP assure l'authentification ; un nouveau CAPTCHA reste manuel.&lt;/p&gt;&lt;button id=&quot;load&quot;&gt;Reprendre un dossier existant&lt;/button&gt;&lt;button id=&quot;pilot&quot;&gt;Pilote · 2 balises&lt;/button&gt;&lt;button id=&quot;all&quot;&gt;Nouveau réseau complet&lt;/button&gt;&lt;button id=&quot;pause&quot; disabled&gt;Pause&lt;/button&gt;&lt;button id=&quot;resume&quot; disabled&gt;Démarrer / continuer&lt;/button&gt;&lt;button id=&quot;close&quot;&gt;Fermer&lt;/button&gt;&lt;pre id=&quot;status&quot;&gt;Prêt. Aucune requête de collecte lancée.&lt;/pre&gt;&lt;/section&gt;`;
+  document.documentElement.append(host);
+  const ui=id=&gt;root.getElementById(id);
+  let running=false,paused=false,closing=false,state=null,directory=null,client=null,needsReconcile=false;
+  const report=text=&gt;{ui('status').textContent=text;};
+  function findClient(){
+    const seen=new Set(),candidates=[];
+    const visit=vm=&gt;{
+      if(!vm||seen.has(vm))return;seen.add(vm);
+      if(vm.$api?.getStationsDataBetween&amp;&amp;vm.$api?.getStationsTimeseries&amp;&amp;vm.$decrypt?.response&amp;&amp;vm.from?.clone&amp;&amp;vm.to?.clone&amp;&amp;typeof vm.type==='string')candidates.push(vm);
+      for(const child of vm.$children||[])visit(child);
+    };
+    for(const node of document.querySelectorAll('*'))if(node.__vue__)visit(node.__vue__.$root||node.__vue__);
+    if(candidates.length!==1)throw new Error(`Client de carte attendu : 1 ; trouvé : ${candidates.length}. Aucune collecte lancée.`);
+    return candidates[0];
+  }
+  const stampOf=response=&gt;{
+    const key=Number(response?.config?.headers?.stamp);
+    if(!Number.isInteger(key)||key&lt;5||key&gt;1000)throw new Error('stamp absent ou invalide. Réponse refusée.');
+    return key;
+  };
+  async function readJSON(name){try{return JSON.parse(await (await (await directory.getFileHandle(name)).getFile()).text());}catch(error){if(error.name==='NotFoundError')return undefined;throw error;}}
+  async function writeJSON(name,value){const file=await directory.getFileHandle(name,{create:true});const stream=await file.createWritable();try{await stream.write(JSON.stringify(value));await stream.close();}catch(error){try{await stream.abort();}catch{}throw error;}}
+  // BEGIN RECOVERY CORE — also exercised directly by the local tests.
+  function validateSavedState(saved){
+    if(saved?.format!=='remanence-collection-v1'||!['pilot','all'].includes(saved.mode)||!Array.isArray(saved.stations)||!saved.stations.length||!Array.isArray(saved.completed)||!Array.isArray(saved.errors))throw new Error('Manifeste incompatible.');
+    const start=Date.parse(saved.start),end=Date.parse(saved.end);
+    if(!Number.isFinite(start)||!Number.isFinite(end)||end&lt;=start)throw new Error('Période du manifeste invalide.');
+    const ids=new Set();
+    for(const station of saved.stations){
+      if(typeof station.id!=='string'||!station.id||!/^[\x20-\x7e]+$/.test(station.id)||ids.has(station.id)||!Number.isFinite(station.lat)||Math.abs(station.lat)&gt;90||!Number.isFinite(station.lon)||Math.abs(station.lon)&gt;180)throw new Error('Inventaire sauvegardé invalide.');
+      ids.add(station.id);
+    }
+    return saved;
+  }
+  function savedPlan(saved){
+    validateSavedState(saved);
+    const plan=[],end=Date.parse(saved.end),step=7*24*3600000;
+    let w=0;
+    for(let start=Date.parse(saved.start);start&lt;end;start=Math.min(start+step,end),w++){
+      for(let offset=0;offset&lt;saved.stations.length;offset+=10)plan.push({id:`w${String(w).padStart(2,'0')}-b${String(offset/10).padStart(4,'0')}`,stations:saved.stations.slice(offset,offset+10),start:new Date(start),end:new Date(Math.min(start+step,end))});
+    }
+    return plan;
+  }
+  function validateSavedPart(part,job){
+    const p=part?.provenance;
+    if(part?.schema!=='remanence-v1'||part.synthetic!==false||part.unit!=='nSv/h'||!Array.isArray(part.observations)||!Array.isArray(part.stations)||!p||!Array.isArray(p.requestedStations)||!Array.isArray(p.missingSeries))throw new Error('Structure du lot invalide.');
+    if(Date.parse(p.start)!==job.start.valueOf()||Date.parse(p.endExclusive)!==job.end.valueOf())throw new Error('Période du lot incohérente.');
+    if(!Number.isInteger(p.requestStamp)||p.requestStamp&lt;5||p.requestStamp&gt;1000)throw new Error('stamp du lot invalide.');
+    const expected=job.stations.map(s=&gt;s.id),requested=new Set(p.requestedStations);
+    if(p.requestedStations.length!==expected.length||requested.size!==expected.length||expected.some(id=&gt;!requested.has(id)))throw new Error('Balises demandées incohérentes.');
+    const metadata=new Map(job.stations.map(s=&gt;[s.id,s])),actualMetadata=new Set();
+    for(const s of part.stations){const original=metadata.get(s.id);if(!original||actualMetadata.has(s.id)||s.lat!==original.lat||s.lon!==original.lon||s.country!==original.country||s.name!==original.name)throw new Error('Métadonnées du lot incohérentes.');actualMetadata.add(s.id);}
+    const seen=new Set(),present=new Set();
+    for(const row of part.observations){
+      const ms=Date.parse(row.time),id=row.stationId+'|'+ms;
+      if(!requested.has(row.stationId)||!actualMetadata.has(row.stationId)||!Number.isFinite(ms)||typeof row.time!=='string'||!/(Z|[+-]\d\d:\d\d)$/.test(row.time)||ms&lt;job.start.valueOf()||ms&gt;=job.end.valueOf()||!Number.isFinite(row.value)||seen.has(id))throw new Error('Observation invalide ou dupliquée.');
+      seen.add(id);present.add(row.stationId);
+    }
+    if(actualMetadata.size!==present.size)throw new Error('Balises sans observation dans les métadonnées du lot.');
+    const missing=expected.filter(id=&gt;!present.has(id)).sort();
+    if(JSON.stringify(missing)!==JSON.stringify([...p.missingSeries].sort()))throw new Error('Absences de séries incohérentes.');
+    return {id:job.id,file:job.id+'.json',requested:expected.length,returned:present.size,observations:part.observations.length,missingSeries:missing};
+  }
+  // END RECOVERY CORE
+  function lockPreparation(){for(const id of ['pilot','all','load'])ui(id).disabled=true;}
+  async function reconcile(){
+    const plan=jobs(),completed=[],invalid=[],missing=[];
+    for(let index=0;index&lt;plan.length;index++){
+      if(closing)throw new Error('Vérification interrompue.');
+      const job=plan[index],filename=job.id+'.json';
+      if(index%20===0)report(`Vérification locale ${index}/${plan.length} lots. Aucune requête REMAP.`);
+      try{
+        const part=await readJSON(filename);
+        if(part===undefined){missing.push(job.id);continue;}
+        completed.push(validateSavedPart(part,job));
+      }catch(error){
+        // Preserve a malformed or inconsistent file before a future replacement.
+        let text;
+        try{text=await (await (await directory.getFileHandle(filename)).getFile()).text();}catch(readError){if(readError.name==='NotFoundError'){missing.push(job.id);continue;}throw readError;}
+        const backup=filename+'.invalid-'+Date.now()+'.txt';
+        const stream=await (await directory.getFileHandle(backup,{create:true})).createWritable();
+        try{await stream.write(text);await stream.close();}catch(writeError){try{await stream.abort();}catch{}throw writeError;}
+        invalid.push({id:job.id,reason:error.message,backup});
+      }
+    }
+    state.completed=completed;state.observations=completed.reduce((total,item)=&gt;total+item.observations,0);state.currentJob=null;
+    state.recovery={checkedAt:new Date().toISOString(),planned:plan.length,valid:completed.length,missing:missing.length,invalid};
+    state.collectionStatus=completed.length===plan.length?'finished':'paused';
+    await writeJSON('manifest.json',state);needsReconcile=false;
+    report(`Période sauvegardée : ${state.start} → ${state.end}\n${completed.length}/${plan.length} lots valides · ${state.observations} observations\n${missing.length} manquants · ${invalid.length} invalides sauvegardés\nCliquez « Démarrer / continuer » pour demander uniquement les lots restants.`);
+  }
+  async function loadExisting(){
+    if(running||state)return;
+    try{
+      if(!window.showDirectoryPicker)throw new Error('Choix de dossier indisponible : utilisez Chrome sur ordinateur.');
+      directory=await window.showDirectoryPicker({mode:'readwrite'});
+      const saved=await readJSON('manifest.json');validateSavedState(saved);client=findClient();
+      await writeJSON('manifest-before-resume-'+Date.now()+'.json',saved);
+      state=saved;lockPreparation();needsReconcile=true;
+      await reconcile();ui('resume').disabled=false;
+    }catch(error){report('Reprise non lancée : '+error.message);if(!state){directory=null;client=null;}else ui('resume').disabled=false;}
+  }
+  function metadata(rows){
+    if(!Array.isArray(rows))throw new Error('Inventaire inattendu.');
+    const seen=new Set();
+    return rows.map(row=&gt;{
+      if(typeof row.code!=='string'||!row.code||!/^[\x20-\x7e]+$/.test(row.code)||seen.has(row.code)||!Number.isFinite(row.lat)||Math.abs(row.lat)&gt;90||!Number.isFinite(row.long)||Math.abs(row.long)&gt;180)throw new Error('Inventaire incomplet ou incohérent.');
+      seen.add(row.code);return {id:row.code,name:row.name,country:row.country,lat:row.lat,lon:row.long};
+    });
+  }
+  async function prepare(mode){
+    if(running||state)return;
+    try{
+      if(!window.showDirectoryPicker)throw new Error('Choix de dossier indisponible : utilisez Chrome sur ordinateur.');
+      // The user explicitly selects and grants write access to the output folder.
+      const selected=await window.showDirectoryPicker({mode:'readwrite'});
+      client=findClient();
+      const end=client.to.clone().utc(),start=client.from.clone().utc();
+      if(!start.isValid()||!end.isValid()||!start.isBefore(end))throw new Error('Période du curseur invalide.');
+      const key=`remap-${start.format('YYYYMMDDHHmmss')}-${end.format('YYYYMMDDHHmmss')}-${mode}`;
+      directory=await selected.getDirectoryHandle(key,{create:true});
+      report('Lecture du plan de reprise…');
+      state=await readJSON('manifest.json');
+      if(state){
+        if(state.format!=='remanence-collection-v1'||state.start!==start.toISOString()||state.end!==end.toISOString()||state.mode!==mode)throw new Error('Plan de reprise incompatible.');
+        validateSavedState(state);await writeJSON('manifest-before-resume-'+Date.now()+'.json',state);needsReconcile=true;
+      }else{
+        report('Chargement de l’inventaire par le client REMAP…');
+        const response=await client.$api.getStationsDataBetween(client.type,start.clone(),end.clone());
+        stampOf(response);
+        const stations=metadata(client.$decrypt.response(response,'code','country','lat','long','name','value'));
+        if(!stations.length)throw new Error('Inventaire vide.');
+        state={format:'remanence-collection-v1',mode,start:start.toISOString(),end:end.toISOString(),inventoryType:client.type,inventoryCount:stations.length,stations:mode==='pilot'?stations.slice(0,2):stations,completed:[],errors:[],observations:0,collectionStatus:'prepared',createdAt:new Date().toISOString()};
+        await writeJSON('manifest.json',state);
+      }
+      lockPreparation();
+      ui('resume').disabled=false;
+      if(needsReconcile){await reconcile();return;}
+      await collect();
+    }catch(error){report('Collecte non lancée ou interrompue : '+error.message);if(!state){directory=null;client=null;}}
+  }
+  function jobs(){
+    const parse=date=&gt;client.to.clone().utc().date(1).set({year:date.getUTCFullYear(),month:date.getUTCMonth(),date:date.getUTCDate(),hour:date.getUTCHours(),minute:date.getUTCMinutes(),second:date.getUTCSeconds(),millisecond:date.getUTCMilliseconds()});
+    return savedPlan(state).map(job=&gt;({...job,start:parse(job.start),end:parse(job.end)}));
+  }
+  async function collect(){
+    if(running||!state)return;
+    running=true;paused=false;ui('pause').disabled=false;ui('resume').disabled=true;
+    state.collectionStatus='running';
+    try{
+      if(needsReconcile)await reconcile();
+      const plan=jobs(),done=new Set(state.completed.map(item=&gt;item.id));
+      for(const job of plan){
+        if(done.has(job.id))continue;
+        if(paused||closing)break;
+        report(`${state.mode==='pilot'?'Pilote':'Réseau'} : ${state.stations.length} balises prévues\n${done.size}/${plan.length} lots terminés · ${state.observations} observations\nRequête ${job.id}`);
+        state.currentJob=job.id;await writeJSON('manifest.json',state);
+        const response=await client.$api.getStationsTimeseries(job.stations.map(s=&gt;s.id),job.start.clone(),job.end.clone());
+        if(response?.status!==200)throw new Error('Réponse HTTP non exploitable.');
+        const stamp=stampOf(response);
+        const rows=client.$decrypt.response(response,'code','value');
+        if(!Array.isArray(rows))throw new Error('Structure de série inattendue.');
+        const requested=new Set(job.stations.map(s=&gt;s.id)),seen=new Map(),present=new Set();
+        const observations=[];
+        for(const row of rows){
+          const ms=Date.parse(row.date);
+          if(!requested.has(row.code)||!Number.isFinite(ms)||!/(Z|[+-]\d\d:\d\d)$/.test(row.date)||!Number.isFinite(row.value))throw new Error('Observation inattendue : lot refusé.');
+          // Half-open windows avoid duplicating shared boundaries.
+          if(ms&lt;job.start.valueOf()||ms&gt;=job.end.valueOf())continue;
+          const id=row.code+'|'+row.date;
+          if(seen.has(id)){if(seen.get(id)!==row.value)throw new Error('Doublon contradictoire.');continue;}
+          seen.set(id,row.value);present.add(row.code);observations.push({stationId:row.code,time:row.date,value:row.value});
+        }
+        const filename=job.id+'.json';
+        await writeJSON(filename,{schema:'remanence-v1',name:`REMAP ${job.id}`,synthetic:false,unit:'nSv/h',stations:job.stations.filter(s=&gt;present.has(s.id)),observations,provenance:{collector:'experimental-client-api-v1',requestStamp:stamp,requestedStations:[...requested],start:job.start.toISOString(),endExclusive:job.end.toISOString(),missingSeries:[...requested].filter(code=&gt;!present.has(code)),capturedAt:new Date().toISOString()}});
+        const item={id:job.id,file:filename,requested:requested.size,returned:present.size,observations:observations.length,missingSeries:[...requested].filter(code=&gt;!present.has(code))};
+        state.completed.push(item);state.observations+=observations.length;state.currentJob=null;done.add(job.id);
+        await writeJSON('manifest.json',state);
+        if(!paused&amp;&amp;!closing)await new Promise(resolve=&gt;setTimeout(resolve,3000));
+      }
+      state.collectionStatus=done.size===plan.length?'finished':'paused';
+      await writeJSON('manifest.json',state);
+      report(`${state.collectionStatus==='finished'?'Collecte terminée':'Collecte en pause'}\n${done.size}/${plan.length} lots · ${state.observations} observations\nLes balises sans série sont documentées dans le manifeste. « Terminé » ne signifie pas couverture complète des mesures.`);
+    }catch(error){
+      needsReconcile=true;
+      state.collectionStatus='error';state.errors.push({job:state.currentJob||null,at:new Date().toISOString(),message:error.message});
+      try{await writeJSON('manifest.json',state);}catch{}
+      report('Arrêt sur erreur : '+error.message+'\nLes lots déjà enregistrés sont conservés. Reprendre ne relance que les lots non terminés.');
+    }finally{running=false;ui('pause').disabled=true;ui('resume').disabled=false;if(closing){host.remove();delete window.__remanenceCollector;}}
+  }
+  ui('pilot').onclick=()=&gt;prepare('pilot');ui('all').onclick=()=&gt;prepare('all');
+  ui('load').onclick=()=&gt;loadExisting();
+  ui('pause').onclick=()=&gt;{paused=true;report('Pause demandée. La requête en cours peut terminer ; aucun lot suivant ne sera lancé.');};
+  ui('resume').onclick=()=&gt;collect();
+  ui('close').onclick=()=&gt;{closing=paused=true;if(!running){host.remove();delete window.__remanenceCollector;}else report('Fermeture après la requête en cours.');};
+  window.__remanenceCollector={show:()=&gt;{host.style.display='block';}};
+})();
+</textarea></details>
+</body></html>

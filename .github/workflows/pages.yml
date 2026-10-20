@@ -1,4 +1,4 @@
-name: Publish Rémanence
+name: Publish Bouffi
 on:
   push:
     branches: [main]

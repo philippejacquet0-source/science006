@@ -1,4 +1,4 @@
-/* Rémanence — manual JSON-response capture in an already open REMAP session. */
+/* Bouffi — manual JSON-response capture in an already open REMAP session. */
 (() => {
   'use strict';
   if (location.hostname !== 'remap.jrc.ec.europa.eu') {
@@ -17,7 +17,7 @@
   const host = document.createElement('div');
   host.style.cssText = 'position:fixed;right:18px;bottom:18px;z-index:2147483647';
   const root = host.attachShadow({mode:'open'});
-  root.innerHTML = '<style>:host{font:13px system-ui;color:#24424b}section{width:310px;background:#fff;border:1px solid #bed2c8;border-radius:10px;padding:19px;box-shadow:0 7px 35px #153a4533}h2{font-size:18px;margin:0 0 10px}p{font-size:11px;line-height:1.7;color:#667c7d}button{font:11px system-ui;cursor:pointer;background:#193f48;color:white;border:0;border-radius:5px;padding:9px 12px;margin:5px 6px 0 0}button:disabled{opacity:.4;cursor:default}#stop{background:#edf2eb;color:#28494c}strong{font-size:12px;color:#2e7678}</style><section><h2>Rémanence · capture v2</h2><p>Sélectionnez une balise et ouvrez sa courbe. Choisissez la période voulue, puis ajoutez les balises voisines à la sélection REMAP. Les séries ne sont reçues qu’à ces actions.</p><strong id="status">0 réponse JSON capturée</strong><p>Capture des réponses réseau et, si disponible, de leur état après traitement par le client REMAP. Les réponses brutes peuvent être encodées. Aucun cookie, valeur d’en-tête ou corps de requête n’est exporté.</p><button id="download" disabled>Télécharger le JSON</button><button id="stop">Arrêter et fermer</button></section>';
+  root.innerHTML = '<style>:host{font:13px system-ui;color:#24424b}section{width:310px;background:#fff;border:1px solid #bed2c8;border-radius:10px;padding:19px;box-shadow:0 7px 35px #153a4533}h2{font-size:18px;margin:0 0 10px}p{font-size:11px;line-height:1.7;color:#667c7d}button{font:11px system-ui;cursor:pointer;background:#193f48;color:white;border:0;border-radius:5px;padding:9px 12px;margin:5px 6px 0 0}button:disabled{opacity:.4;cursor:default}#stop{background:#edf2eb;color:#28494c}strong{font-size:12px;color:#2e7678}</style><section><h2>Bouffi · capture v2</h2><p>Sélectionnez une balise et ouvrez sa courbe. Choisissez la période voulue, puis ajoutez les balises voisines à la sélection REMAP. Les séries ne sont reçues qu’à ces actions.</p><strong id="status">0 réponse JSON capturée</strong><p>Capture des réponses réseau et, si disponible, de leur état après traitement par le client REMAP. Les réponses brutes peuvent être encodées. Aucun cookie, valeur d’en-tête ou corps de requête n’est exporté.</p><button id="download" disabled>Télécharger le JSON</button><button id="stop">Arrêter et fermer</button></section>';
   document.documentElement.append(host);
   const status = root.getElementById('status'), download = root.getElementById('download');
   function sanitize(value, depth = 0) {

@@ -1,4 +1,4 @@
-# Rémanence — science006
+# Bouffi — science006
 
 Application statique d'exploration des variations du débit de dose gamma et de leur évolution territoriale. La page est publiée sur https://philippejacquet0-source.github.io/science006/.
 
@@ -31,7 +31,9 @@ Avec les réglages initiaux, un cluster est retenu sur 57 ensembles constitués 
 
 GitHub Pages héberge la page et l'instantané déjà préparé. GitHub Actions vérifie les fichiers puis publie le site ; il ne contacte pas REMAP et ne collecte aucune mesure. Toute nouvelle collecte reste effectuée par l'utilisateur dans son navigateur avec passage manuel du CAPTCHA, puis normalisée localement.
 
-L'[ancien outil de capture passive](tools/index.html) reste disponible, avec ses limites expérimentales. Il ne constitue pas le collecteur réseau utilisé pour l'instantané publié. Les anciens modules `src/` et leurs tests sont conservés ; la page actuelle utilise `app.mjs`, `cluster-engine.mjs` et `worker.mjs`.
+La page propose un accès direct à [REMAP](https://remap.jrc.ec.europa.eu/) et au [collecteur réseau avec reprise](tools/collecte-remap.html). Le favori est lancé par l'utilisateur dans sa carte REMAP, après passage manuel du CAPTCHA. Il enregistre les lots dans un dossier choisi ; les nouveaux fichiers ne mettent pas automatiquement à jour l'instantané publié. La page de collecte peut être régénérée avec `node tools/build-collector-page.mjs`.
+
+L'[ancien outil de capture passive](tools/index.html) reste disponible, avec ses limites expérimentales. Les anciens modules `src/` et leurs tests sont conservés ; la page actuelle utilise `app.mjs`, `cluster-engine.mjs` et `worker.mjs`.
 
 Les calculs sont effectués dans le navigateur, dans un Web Worker. Le fond simplifié Natural Earth et Leaflet sont fournis avec la page. Fond détaillé charge facultativement les tuiles visibles OpenStreetMap. Les observations ne sont pas transmises au fournisseur du fond. La qualité instrumentale, la météorologie et la cause des variations ne sont pas validées par cet outil.
 
