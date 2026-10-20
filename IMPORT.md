@@ -1,6 +1,6 @@
 # Importer une collecte locale dans Bouffi
 
-Le bouton **Importer un dossier local**, sous les liens REMAP, ouvre le sélecteur de dossiers du navigateur. Dans Chrome sur ordinateur, choisissez directement le dossier de campagne contenant `manifest.json` et les fichiers `w00-b0000.json`, etc. Ne choisissez pas le dossier parent de plusieurs campagnes. Le navigateur peut demander de confirmer la lecture de son contenu.
+Dans le sélecteur de source, choisissez **Dossier sur cet ordinateur**, puis **Importer un dossier local**. Dans Chrome sur ordinateur, choisissez directement le dossier de campagne contenant `manifest.json` et les fichiers `w00-b0000.json`, etc. Ne choisissez pas le dossier parent de plusieurs campagnes. Le navigateur peut demander de confirmer la lecture de son contenu.
 
 ## Traitement
 
@@ -22,4 +22,4 @@ La méthode actuelle utilise les 72 premières heures comme référence et analy
 
 La capacité actuelle est de 12 millions de cases balise × heure, pour limiter la mémoire du navigateur. La collecte locale utilisée pour la vérification comporte 5 981 balises, 188 heures, 1 192 lots valides et six lots absents. Ses 1 021 060 observations reproduisent exactement la matrice horaire de l'instantané publié. Le pilote réel de deux balises et 374 observations a également été importé dans le navigateur.
 
-**Revenir à l'instantané publié** recharge les données fournies avec le site. L'import reste limité à la session de l'onglet : après un rechargement, choisissez à nouveau votre dossier. Il n'ajoute aucun fichier à la publication GitHub. Le fond détaillé OpenStreetMap reste facultatif et ne reçoit aucune mesure.
+Pour revenir aux collectes hébergées, choisissez **Jeux de données en ligne**, la période, puis **Charger ce jeu**. Les jeux du 2–9 et du 13–20 octobre 2026 sont disponibles ; le plus récent est chargé par défaut. L'import reste limité à la session de l'onglet : après un rechargement, choisissez à nouveau votre dossier. Il n'ajoute aucun fichier à la publication GitHub. Le fond détaillé OpenStreetMap reste facultatif et ne reçoit aucune mesure.

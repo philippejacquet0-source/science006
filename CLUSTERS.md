@@ -2,7 +2,7 @@
 
 La recherche examine toutes les balises de l'instantané local. FR1191 n'est ni une balise de départ de l'algorithme ni une condition d'identification ; elle sert à vérifier que le passage observé appartient à un événement plus large. Aucune corrélation de courbes, forme de pic ou sélection d'un maximum individuel n'intervient dans la construction des clusters.
 
-## Résultat initial sur l'instantané réel
+## Résultat sur le jeu du 2–9 octobre 2026
 
 Les réglages initiaux identifient 436 zones horaires, reliées en 57 ensembles temporels. Un ensemble satisfait les critères de déplacement. Le cluster 1 contient la variation de FR1191 le 7 octobre à 10 h UTC : il rassemble 2 747 balises dans 20 pays, avec au plus 661 balises simultanément retenues, du 6 octobre à 13 h au 9 octobre à 19 h UTC (79 cases horaires, dont la dernière partielle). Sa structure comporte 19 nœuds de séparation et 23 nœuds de fusion. Ces nombres décrivent la détection, et non un nombre établi de processus physiques.
 
@@ -61,6 +61,8 @@ Lecture parcourt les zones horaires et leurs branches. Début revient à la prem
 Le dialogue Rechercher d'autres événements propose trois commandes principales : sensibilité, déplacement minimal et soutien instrumental minimal. Les réglages complémentaires modifient le voisinage, la tolérance de déplacement et la durée. À chaque recalcul, toutes les balises sont examinées. L'export conserve les réglages, les zones et leurs liens, la route de nouveaux territoires et les mesures des balises du cluster.
 
 ## Données et limites
+
+Le catalogue propose aussi le jeu du 13–20 octobre 2026, chargé par défaut : 5 955 balises, 966 761 observations, 1 192 lots valides sur 1 192 et une couverture horaire de 90,2 %. Ses 495 zones horaires forment 59 ensembles temporels ; aucun ne satisfait le filtre de déplacement de 1 000 km aux réglages initiaux. Les critères de recherche restent réglables. Le catalogue conserve les périodes séparées et ne les fusionne pas.
 
 Le bouton **Importer un dossier local** remplace les données de l'onglet par une collecte utilisateur, sans transmettre ses fichiers. Les événements sont recalculés avec les critères appliqués. La période, les effectifs et le bilan des lots se rapportent alors à ce dossier, et non à l'instantané ci-dessous. Voir [IMPORT.md](IMPORT.md) pour le format, les vérifications, les lacunes et les limites de l'import.
 

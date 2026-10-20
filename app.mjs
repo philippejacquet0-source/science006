@@ -1,11 +1,12 @@
 import {hull} from './engine.mjs';
 import {clusterDefaults as defaults} from './cluster-engine.mjs';
+import {validateCatalogue,validateHourly} from './dataset-catalog.mjs';
 const $=id=>document.getElementById(id),fmt=(v,d=0)=>Number.isFinite(v)?v.toLocaleString('fr-FR',{maximumFractionDigits:d}):'—';
 const escape=t=>String(t??'').replaceAll('&','&amp;').replaceAll('<','&lt;').replaceAll('>','&gt;').replaceAll('"','&quot;');
 const countryNames=new Intl.DisplayNames(['fr'],{type:'region'});
 const country=c=>{try{return countryNames.of(c)||c;}catch{return c;}};
 let meta,values,result,selected,stationIndex,instant=0,worker,request=0,timer=null,networkOn=false,detailed=false;
-let importWorker=null,busy=false,sourceEpoch=0;
+let importWorker=null,busy=false,sourceEpoch=0,catalogue=null;
 const map=L.map('map',{preferCanvas:true,zoomControl:false,minZoom:2,maxZoom:17}).setView([52,12],4);
 L.control.zoom({position:'topright'}).addTo(map);L.control.scale({position:'bottomright',imperial:false}).addTo(map);
 const renderer=L.canvas({padding:.5}),networkLayer=L.layerGroup(),eventLayer=L.layerGroup().addTo(map),currentLayer=L.layerGroup().addTo(map),labelLayer=L.layerGroup().addTo(map);
@@ -137,7 +138,7 @@ function exportEvent(){
  if(!selected)return;const ids=new Set(selected.ids),observations=[];
  for(const s of ids)for(let t=0;t<meta.T;t++){const v=values[s*meta.T+t];if(Number.isFinite(v))observations.push({stationId:meta.stations[s].id,time:dateISO(t),value:v});}
  const event={...selected,nodes:selected.nodes.map(n=>({id:n.id,time:dateISO(n.t),stationIds:n.ids.map(s=>meta.stations[s].id),center:n.center,parents:n.parents,children:n.children,area:n.area})),ids:selected.ids.map(s=>meta.stations[s].id),start:dateISO(selected.start),end:dateISO(selected.end),peakTime:dateISO(selected.peakTime),series:selected.series.map(p=>({...p,time:dateISO(p.t)})),route:selected.route?{...selected.route,points:selected.route.points.map(p=>({...p,time:dateISO(p.t)}))}:null};
- const bundle={schema:'remanence-clusters-v2',name:`Cluster descriptif ${selected.id}`,unit:'nSv/h',synthetic:false,stations:[...ids].map(s=>meta.stations[s]),observations,analysisSettings:result.settings,event,provenance:{source:meta.sourceKind==='local'?'Dossier local REMAP':'Instantané publié REMAP',sourceName:meta.sourceName,start:meta.start,end:meta.end,validLots:meta.validLots,plannedLots:meta.plannedLots,missingLots:meta.missingLots,invalidLots:meta.invalidLots||[],duplicateCount:meta.duplicateCount||0,method:'CLUSTERS.md'}};
+ const bundle={schema:'remanence-clusters-v2',name:`Cluster descriptif ${selected.id}`,unit:'nSv/h',synthetic:false,stations:[...ids].map(s=>meta.stations[s]),observations,analysisSettings:result.settings,event,provenance:{source:meta.sourceKind==='local'?'Dossier local REMAP':'Jeu en ligne REMAP',sourceName:meta.sourceName,datasetId:meta.datasetId,datasetLabel:meta.datasetLabel,start:meta.start,end:meta.end,validLots:meta.validLots,plannedLots:meta.plannedLots,missingLots:meta.missingLots,invalidLots:meta.invalidLots||[],duplicateCount:meta.duplicateCount||0,method:'CLUSTERS.md'}};
  const url=URL.createObjectURL(new Blob([JSON.stringify(bundle,null,2)],{type:'application/json'})),a=document.createElement('a');a.href=url;a.download=`remap-evenement-${selected.id}.json`;a.click();setTimeout(()=>URL.revokeObjectURL(url),1000);
 }
 $('search').oninput=renderList;$('sort').onchange=renderList;$('fit').onclick=frameSelected;$('basemap').onclick=toggleBasemap;
@@ -152,13 +153,15 @@ $('settings-open').onclick=()=>{$('settings-error').textContent='';$('settings')
  $('reset').onclick=()=>{for(const [key,value] of Object.entries(defaults)){const control=$('settings-form').elements[key];if(control)control.value=value;}$('sensitivity').value='normal';};
 function currentSettings(){const settings=Object.fromEntries([...new FormData($('settings-form'))].map(([k,v])=>[k,Number(v)])),presets={high:{z:3,minExcess:3},normal:{z:4,minExcess:5},low:{z:6,minExcess:10}};return Object.assign(settings,presets[$('sensitivity').value]);}
 $('settings-form').onsubmit=event=>{event.preventDefault();const settings=currentSettings();if(settings.minBaseline>settings.baselineHours||settings.baselineHours>=meta.T){$('settings-error').textContent='La période de référence doit être plus courte que le jeu de données et contenir le minimum d’heures demandé.';return;}recalculate(settings);};
-function setBusy(value){busy=value;$('settings-open').disabled=value||!meta;$('settings-form').querySelector('[type=submit]').disabled=value;$('import-folder').disabled=value;$('restore-snapshot').disabled=value;}
+function setBusy(value){busy=value;$('settings-open').disabled=value||!meta;$('settings-form').querySelector('[type=submit]').disabled=value;for(const id of ['import-folder','source-select','online-dataset','load-online'])$(id).disabled=value;}
+function updateSourceControls(){const local=$('source-select').value==='local';$('local-controls').hidden=!local;$('online-controls').hidden=local;}
 function updateDataset(){
  $('data-stations').textContent=fmt(meta.N);$('data-measures').textContent=fmt(meta.rawCount);$('data-coverage').textContent=fmt(meta.coverage*100,1)+' %';$('time').max=meta.T-1;
  const dates=`${timeLabel(0)} → ${new Date(meta.end).toLocaleString('fr-FR',{timeZone:'UTC',day:'2-digit',month:'short',year:'numeric',hour:'2-digit',minute:'2-digit'})} UTC`;
  $('dataset-period').textContent=`RECHERCHE SUR TOUT LE RÉSEAU · ${new Date(meta.start).toLocaleDateString('fr-FR',{timeZone:'UTC'})} — ${new Date(meta.end).toLocaleDateString('fr-FR',{timeZone:'UTC'})}`;
- $('data-origin').textContent=(meta.sourceKind==='local'?`Dossier local : ${meta.sourceName}`:'Instantané publié')+' · '+dates;
- $('restore-snapshot').hidden=meta.sourceKind!=='local';$('import-report').hidden=false;
+ $('data-origin').textContent=(meta.sourceKind==='local'?`Dossier local : ${meta.sourceName}`:`Jeu en ligne : ${meta.datasetLabel||'collecte REMAP'}`)+' · '+dates;
+ $('source-select').value=meta.sourceKind==='local'?'local':'online';if(meta.datasetId)$('online-dataset').value=meta.datasetId;updateSourceControls();$('import-report').hidden=false;
+ const entry=catalogue?.datasets.find(d=>d.id===meta.datasetId);$('download-collection').hidden=!entry?.archive;if(entry?.archive)$('download-collection').href=entry.archive;
  const lines=[`${meta.validLots} / ${meta.plannedLots} lots valides`,`${meta.missingLots.length} lots absents · ${(meta.invalidLots||[]).length} lots invalides exclus`,`${fmt(meta.rawCount)} observations · ${fmt(meta.coverage*100,1)} % de couverture horaire`];
  if(meta.duplicateCount)lines.push(`${meta.duplicateCount} doublons identiques retirés`);
  for(const id of meta.missingLots)lines.push(`Absent : ${id}`);for(const p of meta.invalidLots||[])lines.push(`Exclu : ${p.id} — ${p.error}`);
@@ -186,11 +189,21 @@ $('folder-input').onchange=()=>{
  candidate.onerror=()=>{if(importWorker!==candidate)return;candidate.terminate();importFinished();$('import-status').textContent='L’import a échoué. Les données affichées sont conservées.';};
  candidate.postMessage({type:'import',files,settings:result?.settings||currentSettings(),request:request+1});
 };
-async function loadSnapshot(){
- if(busy)return;const epoch=++sourceEpoch;setBusy(true);$('import-status').textContent='Chargement de l’instantané publié…';
- try{const responses=await Promise.all([fetch('./data/meta.json'),fetch('./data/values.bin')]);if(responses.some(r=>!r.ok))throw new Error('Instantané publié indisponible. Vous pouvez importer un dossier local.');const nextMeta=await responses[0].json(),nextValues=new Float64Array(await responses[1].arrayBuffer());if(nextValues.length!==nextMeta.N*nextMeta.T)throw new Error('Dimensions de l’instantané incohérentes.');if(epoch!==sourceEpoch)return;
-  clearDatasetView();worker?.terminate();meta=nextMeta;meta.sourceKind='snapshot';values=nextValues;updateDataset();worker=new Worker('./worker.mjs?v=local-import-20261020',{type:'module'});bindWorker(worker);if(networkOn)drawNetwork();$('import-status').textContent='Données de l’instantané publié. Importez un dossier pour analyser votre propre collecte.';recalculate(currentSettings(),true);
- }catch(e){if(epoch===sourceEpoch){setBusy(false);$('import-status').textContent=e.message;}}
+async function loadOnline(){
+ if(busy)return;const entry=catalogue?.datasets.find(d=>d.id===$('online-dataset').value);if(!entry){$('import-status').textContent='Aucun jeu en ligne disponible. Vous pouvez importer un dossier local.';return;}
+ const epoch=++sourceEpoch,nextRequest=request+1;let candidate;setBusy(true);stop();$('import-status').textContent=`Chargement : ${entry.label}…`;
+ try{const responses=await Promise.all([fetch(entry.meta),fetch(entry.values)]);if(responses.some(r=>!r.ok))throw new Error('Ce jeu en ligne est indisponible. Les données précédentes sont conservées.');
+  const nextMeta=await responses[0].json(),nextValues=new Float64Array(await responses[1].arrayBuffer());validateHourly(nextMeta,nextValues);if(epoch!==sourceEpoch)return;
+  nextMeta.sourceKind='online';nextMeta.datasetId=entry.id;nextMeta.datasetLabel=entry.label;
+  candidate=new Worker('./worker.mjs?v=online-catalogue-20261020',{type:'module'});$('import-status').textContent=`Calcul des événements : ${entry.label}…`;
+  candidate.onmessage=event=>{const m=event.data;if(epoch!==sourceEpoch)return;if(m.type==='error'){candidate.terminate();setBusy(false);$('import-status').textContent=m.message;return;}
+   worker?.terminate();worker=candidate;request=nextRequest;clearDatasetView();meta=nextMeta;values=nextValues;bindWorker(worker);updateDataset();displayResult(m.result);if(networkOn)drawNetwork();setBusy(false);$('import-status').textContent='Jeu disponible en ligne, analysé dans votre navigateur. Vous pouvez changer de période ou importer une collecte depuis votre ordinateur.';
+  };
+  candidate.onerror=()=>{if(epoch!==sourceEpoch)return;candidate.terminate();setBusy(false);$('import-status').textContent='Le calcul du jeu en ligne a échoué. Les données précédentes sont conservées.';};
+  candidate.postMessage({type:'init',meta:nextMeta,buffer:nextValues.buffer.slice(0),settings:result?.settings||currentSettings(),request:nextRequest});
+ }catch(e){if(epoch===sourceEpoch){candidate?.terminate();setBusy(false);$('import-status').textContent=e.message;}}
 }
-$('restore-snapshot').onclick=loadSnapshot;
-await setupMap();await loadSnapshot();
+$('source-select').onchange=updateSourceControls;$('load-online').onclick=loadOnline;
+setBusy(true);await setupMap();
+try{setBusy(true);const response=await fetch('./data/catalogue.json?v=online-catalogue-20261020');if(!response.ok)throw new Error('Catalogue indisponible. Vous pouvez importer un dossier local.');catalogue=validateCatalogue(await response.json());$('online-dataset').innerHTML=catalogue.datasets.map(d=>`<option value="${escape(d.id)}">${escape(d.label)}</option>`).join('');$('online-dataset').value=catalogue.defaultDataset;setBusy(false);await loadOnline();}
+catch(e){setBusy(false);$('import-status').textContent=e.message;}

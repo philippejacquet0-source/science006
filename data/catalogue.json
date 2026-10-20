@@ -1,0 +1,19 @@
+{
+  "format": "bouffi-datasets-v1",
+  "defaultDataset": "2026-10-13_2026-10-20",
+  "datasets": [
+    {
+      "id": "2026-10-13_2026-10-20",
+      "label": "13–20 octobre 2026 · 5 955 balises",
+      "meta": "./data/collections/2026-10-13_2026-10-20/meta.json",
+      "values": "./data/collections/2026-10-13_2026-10-20/values.bin",
+      "archive": "./data/collections/2026-10-13_2026-10-20/collecte.zip"
+    },
+    {
+      "id": "2026-10-02_2026-10-09",
+      "label": "2–9 octobre 2026 · 5 981 balises",
+      "meta": "./data/meta.json",
+      "values": "./data/values.bin"
+    }
+  ]
+}

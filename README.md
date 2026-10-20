@@ -19,19 +19,26 @@ Réglages initiaux demandés :
 
 Les autres critères et leurs limites sont décrits dans [CLUSTERS.md](CLUSTERS.md). Lecture anime les zones ; le graphe montre leurs branches. Rechercher d'autres événements recalcule l'ensemble du réseau avec les nouveaux seuils. Filtrer par pays ou balise agit sur la liste des résultats. Afficher une balise ouvre sa courbe et, s'il est retenu, le cluster auquel elle appartient.
 
-## Instantané publié
+## Jeux de données en ligne
 
-Collecte réalisée par l'utilisateur dans sa session REMAP, après passage manuel du CAPTCHA : du 2 octobre 2026 à 00 h UTC au 9 octobre à 19:24:21 UTC. L'instantané contient 5 981 balises et 1 021 060 observations sources ; la couverture horaire est de 90,8 %. Six lots manquent et la dernière heure est partielle. Les coordonnées et les valeurs proviennent du traitement observé dans le client REMAP ; aucun facteur de décodage n'est conjecturé.
+Deux collectes réalisées par l'utilisateur dans sa session REMAP, après passage manuel du CAPTCHA, sont proposées :
 
-Les fichiers `data/meta.json` et `data/values.bin` contiennent les métadonnées et les moyennes horaires. `values.bin` est une matrice Float64, ordre balise puis heure ; les lacunes sont des NaN. Le protocole documente la référence, les seuils, les routes territoriales et les limites.
+| Période UTC | Balises | Observations | Couverture horaire | Lots absents |
+|---|---:|---:|---:|---:|
+| 13 octobre 2026 à 00 h → 20 octobre à 11:53:33 | 5 955 | 966 761 | 90,2 % | 0 |
+| 2 octobre 2026 à 00 h → 9 octobre à 19:24:21 | 5 981 | 1 021 060 | 90,8 % | 6 |
 
-Avec les réglages initiaux, un cluster est retenu sur 57 ensembles constitués de 436 zones horaires. Il contient le passage de FR1191 : 2 747 balises dans 20 pays, jusqu'à 661 simultanément, et une route territoriale d'environ 1 044 km. Ces effectifs dépendent des seuils.
+Le jeu le plus récent est chargé par défaut. La dernière heure de chaque période est partielle. Les coordonnées et les valeurs proviennent du traitement observé dans le client REMAP ; aucun facteur de décodage n'est conjecturé.
+
+`data/catalogue.json` décrit les jeux disponibles et leurs fichiers. Le jeu du 2–9 octobre conserve `data/meta.json` et `data/values.bin`. Celui du 13–20 octobre est dans `data/collections/2026-10-13_2026-10-20/`, avec une archive ZIP des lots et du manifeste final. Chaque `values.bin` est une matrice Float64, ordre balise puis heure ; les lacunes sont des NaN. Le protocole documente la référence, les seuils, les routes territoriales et les limites.
+
+Avec les réglages initiaux, le jeu du 2–9 octobre conserve le cluster contenant FR1191 : 2 747 balises dans 20 pays, jusqu'à 661 simultanément, et une route territoriale d'environ 1 044 km. Pour le 13–20 octobre, 495 zones horaires forment 59 ensembles, sans cluster satisfaisant le filtre de déplacement de 1 000 km. Ces résultats dépendent des seuils.
 
 ## Collecte et hébergement
 
 GitHub Pages héberge la page et l'instantané déjà préparé. GitHub Actions vérifie les fichiers puis publie le site ; il ne contacte pas REMAP et ne collecte aucune mesure. Toute nouvelle collecte reste effectuée par l'utilisateur dans son navigateur avec passage manuel du CAPTCHA, puis normalisée localement.
 
-La page propose un accès direct à [REMAP](https://remap.jrc.ec.europa.eu/) et au [collecteur réseau avec reprise](tools/collecte-remap.html). Le favori est lancé par l'utilisateur dans sa carte REMAP, après passage manuel du CAPTCHA. Il enregistre les lots dans un dossier choisi. **Importer un dossier local** permet ensuite de charger cette campagne dans Bouffi et de recalculer les événements dans le navigateur, sans transmettre les fichiers. Le dossier doit contenir `manifest.json` et ses lots. Le bilan distingue les lots absents et invalides ; une annulation ou un import refusé conserve les données précédentes. **Revenir à l'instantané publié** restaure les données fournies avec le site. Voir [IMPORT.md](IMPORT.md) pour les formats, la période minimale et les limites de mémoire. La page de collecte peut être régénérée avec `node tools/build-collector-page.mjs`.
+La page propose un accès direct à [REMAP](https://remap.jrc.ec.europa.eu/) et au [collecteur réseau avec reprise](tools/collecte-remap.html). Le favori est lancé par l'utilisateur dans sa carte REMAP, après passage manuel du CAPTCHA. Il enregistre les lots dans un dossier choisi. Le choix **Dossier sur cet ordinateur**, puis **Importer un dossier local**, charge cette campagne sans transmettre les fichiers. Le dossier doit contenir `manifest.json` et ses lots. Le bilan distingue les lots absents et invalides ; une annulation ou un import refusé conserve les données précédentes. Pour les collectes hébergées, choisir **Jeux de données en ligne**, la période, puis **Charger ce jeu**. Un changement validé réinitialise le filtre et les balises affichées, tout en conservant les critères de recherche. Voir [IMPORT.md](IMPORT.md) pour les formats et limites. La page de collecte peut être régénérée avec `node tools/build-collector-page.mjs`.
 
 L'[ancien outil de capture passive](tools/index.html) reste disponible, avec ses limites expérimentales. Les anciens modules `src/` et leurs tests sont conservés ; la page actuelle utilise `app.mjs`, `cluster-engine.mjs` et `worker.mjs`.
 
