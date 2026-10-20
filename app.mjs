@@ -8,7 +8,7 @@ const country=c=>{try{return countryNames.of(c)||c;}catch{return c;}};
 let meta,values,result,selected,stationIndex,instant=0,worker,request=0,timer=null,networkOn=false,detailed=false;
 let importWorker=null,busy=false,sourceEpoch=0,catalogue=null;
 let gifWorker=null,gifUrl=null;
-const map=L.map('map',{preferCanvas:true,zoomControl:false,minZoom:2,maxZoom:17}).setView([52,12],4);
+const map=L.map('map',{preferCanvas:true,zoomControl:false,minZoom:2,maxZoom:17,zoomSnap:.25,zoomDelta:.5}).setView([52,12],4);
 L.control.zoom({position:'topright'}).addTo(map);L.control.scale({position:'bottomright',imperial:false}).addTo(map);
 const renderer=L.canvas({padding:.5}),networkLayer=L.layerGroup(),eventLayer=L.layerGroup().addTo(map),currentLayer=L.layerGroup().addTo(map),labelLayer=L.layerGroup().addTo(map);
 const offline=L.layerGroup().addTo(map);let basemap;
@@ -31,7 +31,7 @@ function toggleBasemap(){
   map.removeLayer(offline);map.removeLayer(labelLayer);basemap.addTo(map);$('tile-note').textContent='Fond détaillé · OpenStreetMap (accès internet)';
  }else{if(basemap)map.removeLayer(basemap);offline.addTo(map);labelLayer.addTo(map);$('tile-note').textContent='Fond local · Natural Earth';}
 }
-function drawNetwork(){networkLayer.clearLayers();for(let s=0;s<meta.N;s++){const station=meta.stations[s];L.circleMarker([station.lat,station.lon],{renderer,radius:2.2,color:'#899b8c',weight:.5,fillOpacity:.35}).on('click',()=>chooseStation(s)).addTo(networkLayer);}}
+function drawNetwork(){networkLayer.clearLayers();for(let s=0;s<meta.N;s++){const station=meta.stations[s];L.circleMarker([station.lat,station.lon],{renderer,radius:2.2,color:'#899b8c',weight:.5,fillOpacity:.35}).on('click',()=>inspectStation(s)).addTo(networkLayer);}}
 function spark(e){const max=Math.max(...e.series.map(p=>p.count),1),length=Math.max(1,e.end-e.start);return `<svg class="sparkline" viewBox="0 0 240 26" aria-hidden="true"><path d="${e.series.map((p,i)=>`${i?'L':'M'}${(p.t-e.start)/length*238+1},${24-p.count/max*20}`).join(' ')}" fill="none" stroke="#8a9b73" stroke-width="1.5"/></svg>`;}
 function orderedEvents(){const key=$('sort').value;return [...result.events].sort((a,b)=>key==='start'?a.start-b.start:b[key]-a[key]);}
 function renderList(){
@@ -58,7 +58,7 @@ function selectEvent(id){
 }
 function drawEventFootprint(){
  eventLayer.clearLayers();if(!selected)return;
- for(const s of selected.ids){const p=meta.stations[s];L.circleMarker([p.lat,p.lon],{renderer,radius:2.3,color:'#9fab9a',weight:.3,fillColor:'#b9c5b2',fillOpacity:.25}).on('click',()=>chooseStation(s)).addTo(eventLayer);}
+ for(const s of selected.ids){const p=meta.stations[s];L.circleMarker([p.lat,p.lon],{renderer,radius:2.3,color:'#9fab9a',weight:.3,fillColor:'#b9c5b2',fillOpacity:.25}).on('click',()=>inspectStation(s)).addTo(eventLayer);}
 }
 function renderTime(){
  if(!meta)return;$('time').value=instant;$('map-time-label').textContent=timeLabel(instant)+' UTC';currentLayer.clearLayers();
@@ -73,7 +73,7 @@ function renderTime(){
   for(const node of selected.nodes.filter(n=>n.t===instant)){
    const poly=hull(node.ids.map(s=>meta.stations[s]));if(poly.length>=3)L.polygon(poly.map(p=>[p[1],p[0]]),{renderer,color:'#b6703e',weight:1.2,fillColor:'#be7d44',fillOpacity:.12,interactive:false}).addTo(currentLayer);
    for(const s of node.ids){const p=meta.stations[s],excess=values[s*meta.T+instant]-result.refs[s],color=excess>50?'#ad4529':excess>25?'#c67438':'#d59853';
-    const marker=L.circleMarker([p.lat,p.lon],{renderer,radius:6+Math.min(3,excess/50),color:'#fff',weight:1.1,fillColor:color,fillOpacity:.95}).on('click',()=>chooseStation(s));
+    const marker=L.circleMarker([p.lat,p.lon],{renderer,radius:6+Math.min(3,excess/50),color:'#fff',weight:1.1,fillColor:color,fillOpacity:.95}).on('click',()=>inspectStation(s));
     marker.bindTooltip(`<strong>${escape(p.id)}</strong><br>${fmt(values[s*meta.T+instant],2)} nSv/h · excès +${fmt(excess,2)}`,{direction:'top'});marker.addTo(currentLayer);
    }
   }
@@ -81,7 +81,7 @@ function renderTime(){
  updateFacts();drawEventChart();drawStationChart();drawLineage();
 }
 function drawEventChart(){
- const e=selected,W=1100,H=170,LX=50,RX=1050,top=16,bottom=132,start=e?Math.max(result.settings.baselineHours,e.start-4):result?.settings.baselineHours||0,end=e?Math.min(meta.T-1,e.end+4):meta.T-1;
+ const e=selected,W=1100,H=130,LX=50,RX=1050,top=10,bottom=96,start=e?Math.max(result.settings.baselineHours,e.start-4):result?.settings.baselineHours||0,end=e?Math.min(meta.T-1,e.end+4):meta.T-1;
  const series=e?e.series:[...result.activity].map((count,t)=>({t,count,excess:0})).filter(p=>p.t>=start),maxC=Math.max(1,...series.map(p=>p.count)),maxE=Math.max(1,...series.map(p=>p.excess||0));
  const x=t=>LX+(t-start)/Math.max(1,end-start)*(RX-LX),yC=v=>bottom-v/maxC*(bottom-top),yE=v=>bottom-v/maxE*(bottom-top),bw=Math.max(2,(RX-LX)/(end-start+1)*.72);
  let content='';for(let j=0;j<=3;j++){const y=bottom-j/3*(bottom-top);content+=svg('line',{x1:LX,x2:RX,y1:y,y2:y,stroke:'#edf0e8'})+svg('text',{x:LX-10,y:y+3,'text-anchor':'end',class:'chart-axis'},fmt(maxC*j/3))+svg('text',{x:RX+8,y:y+3,class:'chart-axis'},fmt(maxE*j/3));}
@@ -89,7 +89,7 @@ function drawEventChart(){
  let last=null;const paths=[];for(const p of series){if(last!==null&&p.t!==last+1)paths.push('');if(!paths.length)paths.push('');paths[paths.length-1]+=`${paths.at(-1)?' L':'M'}${x(p.t)},${yE(p.excess||0)}`;last=p.t;}for(const d of paths)content+=svg('path',{d,fill:'none',stroke:'#b36637','stroke-width':2});
  for(const peak of e?.peaks||[])content+=svg('path',{d:`M${x(peak.t)},${yE(peak.excess)-6} l4,4 l-4,4 l-4,-4 Z`,fill:'#bf823e'});
  if(instant>=start&&instant<=end)content+=svg('line',{x1:x(instant),x2:x(instant),y1:top,y2:bottom,stroke:'#355744','stroke-width':1,'stroke-dasharray':'3 3'});
- const ticks=new Set([start,end,...Array.from({length:5},(_,i)=>Math.round(start+(end-start)*i/4))]);for(const t of ticks)content+=svg('text',{x:x(t),y:162,'text-anchor':'middle',class:'chart-axis'},timeLabel(t));
+ const ticks=new Set([start,end,...Array.from({length:5},(_,i)=>Math.round(start+(end-start)*i/4))]);for(const t of ticks)content+=svg('text',{x:x(t),y:122,'text-anchor':'middle',class:'chart-axis'},timeLabel(t));
  $('event-chart').innerHTML=content;$('event-chart').setAttribute('aria-label',e?`Cluster ${e.id} : ${e.maxCount} balises simultanées au maximum, jusqu’à ${e.maxZones} zones simultanées.`:'Activité globale des balises');
  $('time').min=start;$('time').max=end;$('time').value=Math.max(start,Math.min(end,instant));
  $('peak-note').textContent=e?`${e.ids.length} balises distinctes · jusqu’à ${e.maxZones} zones simultanées · ${e.countries.length} pays`:'';
@@ -105,6 +105,7 @@ function drawLineage(){
  $('lineage').setAttribute('aria-label',`${e.nodes.length} zones horaires, ${e.branches} séparations, ${e.mergers} fusions dans le cluster ${e.id}.`);
  $('route-note').textContent=e.route?`Progression des nouveaux territoires activés : ${fmt(e.travel)} km entre ${timeLabel(e.route.start)} et ${timeLabel(e.route.end)} UTC. Cette distance concerne une route de cellules reliées ; elle n’est pas la taille simultanée de la zone. Pays du cluster : ${e.countries.map(country).join(', ')}.`:'';
 }
+function inspectStation(s){$('station-details').open=true;chooseStation(s);$('station-details').scrollIntoView({block:'nearest',behavior:'smooth'});}
 function chooseStation(s){
  stationIndex=s;if(!meta)return;const p=meta.stations[s];
  if(!$('station-select').querySelector(`option[value="${s}"]`))$('station-select').insertAdjacentHTML('beforeend',`<option value="${s}">${escape(p.id)}</option>`);
@@ -143,7 +144,7 @@ function exportEvent(){
  const bundle={schema:'remanence-clusters-v2',name:`Cluster descriptif ${selected.id}`,unit:'nSv/h',synthetic:false,stations:[...ids].map(s=>meta.stations[s]),observations,analysisSettings:result.settings,event,provenance:{source:meta.sourceKind==='local'?'Dossier local REMAP':'Jeu en ligne REMAP',sourceName:meta.sourceName,datasetId:meta.datasetId,datasetLabel:meta.datasetLabel,start:meta.start,end:meta.end,validLots:meta.validLots,plannedLots:meta.plannedLots,missingLots:meta.missingLots,invalidLots:meta.invalidLots||[],duplicateCount:meta.duplicateCount||0,method:'CLUSTERS.md'}};
  const url=URL.createObjectURL(new Blob([JSON.stringify(bundle,null,2)],{type:'application/json'})),a=document.createElement('a');a.href=url;a.download=`remap-evenement-${selected.id}.json`;a.click();setTimeout(()=>URL.revokeObjectURL(url),1000);
 }
-function cancelGif(){gifWorker?.terminate();gifWorker=null;$('gif-cancel').hidden=true;$('gif-generate').disabled=false;}
+function cancelGif(){gifWorker?.terminate();gifWorker=null;$('gif-cancel').hidden=true;$('gif-generate').disabled=false;$('gif-generate').textContent=gifUrl?'Recréer le GIF':'Générer le GIF · 3 secondes';}
 function clearGif(){cancelGif();$('gif-preview').removeAttribute('src');$('gif-result').hidden=true;if(gifUrl)URL.revokeObjectURL(gifUrl);gifUrl=null;}
 function openExport(){
  if(!selected||busy)return;stop();clearGif();$('export-title').textContent=`Exporter le cluster ${String(selected.id).padStart(2,'0')}`;
@@ -177,17 +178,20 @@ function showNamedStation(){if(!meta||!result)return;const s=meta.stations.findI
 if($('station-find')){$('station-find').onchange=showNamedStation;$('station-find').onkeydown=e=>{if(e.key==='Enter')showNamedStation();};}if($('station-go'))$('station-go').onclick=showNamedStation;
 $('network').onclick=()=>{networkOn=!networkOn;$('network').setAttribute('aria-pressed',networkOn);if(networkOn){if(!networkLayer.getLayers().length)drawNetwork();networkLayer.addTo(map);}else map.removeLayer(networkLayer);};
 $('time').oninput=()=>{stop();instant=Number($('time').value);renderTime();};$('previous').onclick=()=>{stop();instant=Math.max(Number($('time').min),instant-1);renderTime();};$('next').onclick=()=>{stop();instant=Math.min(Number($('time').max),instant+1);renderTime();};$('play').onclick=play;$('speed').onchange=()=>{if(timer){stop();play();}};
-$('station-select').onchange=()=>chooseStation(Number($('station-select').value));$('export').onclick=openExport;
+$('station-select').onchange=()=>chooseStation(Number($('station-select').value));$('export').onclick=exportEvent;
+$('gif-export').onclick=()=>{if(!selected||busy)return;openExport();generateGif();};
+$('lineage-details').ontoggle=()=>{if($('lineage-details').open)drawLineage();};
 $('settings-open').onclick=()=>{$('settings-error').textContent='';$('settings').showModal();};$('method-open').onclick=()=>{$('method').showModal();};for(const b of document.querySelectorAll('[data-close]'))b.onclick=()=>$(b.dataset.close).close();
  $('reset').onclick=()=>{for(const [key,value] of Object.entries(defaults)){const control=$('settings-form').elements[key];if(control)control.value=value;}$('sensitivity').value='low';};
 function currentSettings(){const settings=Object.fromEntries([...new FormData($('settings-form'))].map(([k,v])=>[k,Number(v)])),presets={high:{z:3,minExcess:3},normal:{z:4,minExcess:5},low:{z:6,minExcess:10}};return Object.assign(settings,presets[$('sensitivity').value]);}
 $('settings-form').onsubmit=event=>{event.preventDefault();const settings=currentSettings();if(settings.minBaseline>settings.baselineHours||settings.baselineHours>=meta.T){$('settings-error').textContent='La période de référence doit être plus courte que le jeu de données et contenir le minimum d’heures demandé.';return;}recalculate(settings);};
-function setBusy(value){busy=value;$('settings-open').disabled=value||!meta;$('settings-form').querySelector('[type=submit]').disabled=value;for(const id of ['import-folder','source-select','online-dataset','load-online'])$(id).disabled=value;$('export').disabled=value||!selected;}
+function setBusy(value){busy=value;$('settings-open').disabled=value||!meta;$('settings-form').querySelector('[type=submit]').disabled=value;for(const id of ['import-folder','source-select','online-dataset','load-online'])$(id).disabled=value;for(const id of ['export','gif-export'])$(id).disabled=value||!selected;}
 function updateSourceControls(){const local=$('source-select').value==='local';$('local-controls').hidden=!local;$('online-controls').hidden=local;}
 function updateDataset(){
  $('data-stations').textContent=fmt(meta.N);$('data-measures').textContent=fmt(meta.rawCount);$('data-coverage').textContent=fmt(meta.coverage*100,1)+' %';$('time').max=meta.T-1;
  const dates=`${timeLabel(0)} → ${new Date(meta.end).toLocaleString('fr-FR',{timeZone:'UTC',day:'2-digit',month:'short',year:'numeric',hour:'2-digit',minute:'2-digit'})} UTC`;
  $('dataset-period').textContent=`RECHERCHE SUR TOUT LE RÉSEAU · ${new Date(meta.start).toLocaleDateString('fr-FR',{timeZone:'UTC'})} — ${new Date(meta.end).toLocaleDateString('fr-FR',{timeZone:'UTC'})}`;
+ $('data-summary').textContent=meta.sourceKind==='local'?`Dossier local · ${meta.sourceName}`:`En ligne · ${meta.datasetLabel||'collecte REMAP'}`;
  $('data-origin').textContent=(meta.sourceKind==='local'?`Dossier local : ${meta.sourceName}`:`Jeu en ligne : ${meta.datasetLabel||'collecte REMAP'}`)+' · '+dates;
  $('source-select').value=meta.sourceKind==='local'?'local':'online';if(meta.datasetId)$('online-dataset').value=meta.datasetId;updateSourceControls();$('import-report').hidden=false;
  const entry=catalogue?.datasets.find(d=>d.id===meta.datasetId);$('download-collection').hidden=!entry?.archive;if(entry?.archive)$('download-collection').href=entry.archive;
@@ -200,7 +204,7 @@ function displayResult(next){
  result=next;populateMethod();$('settings').close();$('criteria-note').textContent=`Au moins ${result.settings.minStations} balises par zone · déplacement ≥ ${result.settings.minTravel} km · durée ≥ ${result.settings.minHours} h`;
  notify(`${result.events.length} ${result.events.length===1?'cluster en déplacement retenu':'clusters en déplacement retenus'} sur ${result.allEvents.length} ensembles · ${fmt(result.zoneCount)} zones horaires · ${meta.missingLots.length} lots absents · ${(meta.invalidLots||[]).length} lots invalides exclus`);
  if(result.events.length)selectEvent(orderedEvents()[0].id);else{selected=null;eventLayer.clearLayers();currentLayer.clearLayers();renderList();instant=Math.min(meta.T-1,result.settings.baselineHours);renderTime();$('map-context').textContent='RÉSEAU IMPORTÉ';$('map-title').textContent='Aucun événement avec ces critères';$('timeline-title').textContent='Activité globale · ajustez les critères pour regrouper les écarts';$('event-facts').innerHTML='';$('lineage').innerHTML='';$('route-note').textContent='Aucun cluster satisfait ces critères de déplacement. Les mesures restent consultables.';$('station-select').innerHTML=meta.stations.map((s,i)=>`<option value="${i}">${escape(s.id)}</option>`).join('');chooseStation(0);}
- $('export').disabled=busy||!selected;
+ for(const id of ['export','gif-export'])$(id).disabled=busy||!selected;
 }
 function bindWorker(target){target.onmessage=event=>{const m=event.data;if(m.request!==request)return;setBusy(false);if(m.type==='error'){$('settings-error').textContent=m.message;notify(m.message,true);return;}displayResult(m.result);};target.onerror=()=>{setBusy(false);notify('Le calcul a échoué. Rechargez les données ou ajustez les critères.',true);};}
 function clearDatasetView(){stop();selected=null;result=null;stationIndex=undefined;instant=0;eventLayer.clearLayers();currentLayer.clearLayers();networkLayer.clearLayers();$('search').value='';$('station-find').value='';$('lineage').innerHTML='';$('station-chart').innerHTML='';}
@@ -231,9 +235,9 @@ async function loadOnline(){
   };
   candidate.onerror=()=>{if(epoch!==sourceEpoch)return;candidate.terminate();setBusy(false);$('import-status').textContent='Le calcul du jeu en ligne a échoué. Les données précédentes sont conservées.';};
   candidate.postMessage({type:'init',meta:nextMeta,buffer:nextValues.buffer.slice(0),settings:result?.settings||currentSettings(),request:nextRequest});
- }catch(e){if(epoch===sourceEpoch){candidate?.terminate();setBusy(false);$('import-status').textContent=e.message;}}
+ }catch(e){if(epoch===sourceEpoch){candidate?.terminate();setBusy(false);$('import-status').textContent=e.message;notify(e.message,true);}}
 }
 $('source-select').onchange=updateSourceControls;$('load-online').onclick=loadOnline;
 setBusy(true);await setupMap();
 try{setBusy(true);const response=await fetch('./data/catalogue.json?v=online-catalogue-20261020');if(!response.ok)throw new Error('Catalogue indisponible. Vous pouvez importer un dossier local.');catalogue=validateCatalogue(await response.json());$('online-dataset').innerHTML=catalogue.datasets.map(d=>`<option value="${escape(d.id)}">${escape(d.label)}</option>`).join('');$('online-dataset').value=catalogue.defaultDataset;setBusy(false);await loadOnline();}
-catch(e){setBusy(false);$('import-status').textContent=e.message;}
+catch(e){setBusy(false);$('import-status').textContent=e.message;notify(e.message,true);}
