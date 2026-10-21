@@ -2,6 +2,12 @@
 
 Application statique d'exploration des variations du débit de dose gamma et de leur évolution territoriale. La page est publiée sur https://philippejacquet0-source.github.io/science006/.
 
+## Eau et précipitations
+
+La carte superpose désormais l’eau précipitable et les précipitations GFS aux balises, à la même heure UTC. Le panneau météo permet de choisir un calcul de prévision daté, de suivre une structure pluvieuse à +3, +6, +12 ou +24 h et de comparer les valeurs dans la cellule d’une balise. Les couches activées sont incluses dans le GIF. Les reconstitutions sont distinguées des prévisions ; aucune dose future n’est calculée.
+
+Lire [METEO.md](METEO.md) pour les sources, l’échantillonnage 2°, le calage de la pluie et les limites. Le contexte utilisateur et la suite du travail sont conservés dans [CODEX-BRIEF.md](CODEX-BRIEF.md).
+
 ## Recherche des événements
 
 Toutes les balises sont examinées. Les variations persistantes par rapport à une référence locale forment des zones simultanées ; leurs liaisons entre heures constituent des clusters, avec séparations et fusions. Aucune forme de pic et aucune balise de départ ne sont imposées. Le classement et la sélection décrivent les mesures ; ils ne déterminent pas une origine physique.

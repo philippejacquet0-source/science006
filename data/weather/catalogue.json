@@ -1,0 +1,10 @@
+{
+  "format": "bouffi-weather-catalogue-v1",
+  "entries": [
+    {"id":"archive-20261013","label":"Reconstitution · 13–21 octobre","kind":"archive","path":"./data/weather/archive-20261013.json.gz","datasets":["2026-10-13_2026-10-20"]},
+    {"id":"run-20261019","label":"Prévision GFS · calcul du 19 octobre à 00 UTC","kind":"forecast","path":"./data/weather/run-20261019.json.gz","datasets":["2026-10-13_2026-10-20"]},
+    {"id":"run-20261016","label":"Prévision GFS · calcul du 16 octobre à 00 UTC","kind":"forecast","path":"./data/weather/run-20261016.json.gz","datasets":["2026-10-13_2026-10-20"]},
+    {"id":"archive-20261002","label":"Reconstitution · 2–10 octobre","kind":"archive","path":"./data/weather/archive-20261002.json.gz","datasets":["2026-10-02_2026-10-09"]},
+    {"id":"run-20261006","label":"Prévision GFS · calcul du 6 octobre à 00 UTC","kind":"forecast","path":"./data/weather/run-20261006.json.gz","datasets":["2026-10-02_2026-10-09"]}
+  ]
+}
