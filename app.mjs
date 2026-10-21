@@ -1,4 +1,4 @@
-import {WeatherUI} from './weather-ui.mjs?v=water-20261021';
+import {WeatherUI} from './weather-ui.mjs?v=water-20261021b';
 import {hull} from './engine.mjs';
 import {clusterDefaults as defaults} from './cluster-engine.mjs?v=defaults-20261020';
 import {validateCatalogue,validateHourly} from './dataset-catalog.mjs';

@@ -47,6 +47,7 @@ export class WeatherUI {
 
   async loadDataset(datasetId) {
     const token=++this.epoch;this.pack=null;this.manualCell=null;this.station=null;this.entryName='';this.outlines.clearLayers();this.paint();
+    this.clearContext();
     $('weather-status').textContent='Chargement des champs d’eau et de précipitations…';
     try{
       if(!this.catalogue){const r=await fetch('./data/weather/catalogue.json');if(!r.ok)throw new Error('Catalogue météo indisponible.');this.catalogue=await r.json();}
@@ -61,6 +62,7 @@ export class WeatherUI {
 
   async loadEntry(entry) {
     if(!entry)return;const token=++this.epoch;this.pack=null;this.manualCell=null;this.outlines.clearLayers();this.paint();
+    this.clearContext();
     $('weather-status').textContent='Chargement : '+entry.label+'…';
     try{
       const pack=await this.decode(await fetch(entry.path),entry.path.endsWith('.gz'));
@@ -75,6 +77,12 @@ export class WeatherUI {
   }
 
   inspectStation(station) {this.station=station;this.renderStation();}
+  clearContext() {
+    $('weather-map-tag').hidden=true;
+    $('weather-provenance').textContent='';
+    $('weather-association').textContent='Association en attente des nouveaux champs météo.';
+    $('weather-station').textContent='Valeurs météo en cours de chargement.';
+  }
   gifSnapshot() {return this.enabled&&this.pack?{pack:this.pack,mode:this.mode,opacity:this.opacity,lead:this.lead}:null;}
   radioTime() {return this.state.meta.origin+this.state.instant*HOUR;}
 
