@@ -1,6 +1,7 @@
 import {GIFEncoder,quantize,applyPalette} from './vendor/gifenc.mjs';
 import {hull} from './engine.mjs';
 import {framePlan,europeView,gifSize} from './gif-plan.mjs';
+import {HOUR,frameAt,cellBounds,forecastEligible} from './weather-engine.mjs';
 
 const ink='#233f39',muted='#66786d',orange='#b85e31',green='#547962',paper='#f5f5ed',water='#e4eeef';
 const mapBox={x:28,y:164,w:910,h:640};
@@ -27,7 +28,7 @@ function legend(ctx,x,y,color,label,r=3){dot(ctx,x+4,y-5,r,color);text(ctx,label
 function makeBackground(model,geo,world,view,plan){
  const {event:e,meta,stations,settings}=model,canvas=new OffscreenCanvas(gifSize.width,gifSize.height),ctx=canvas.getContext('2d');
  ctx.fillStyle=paper;ctx.fillRect(0,0,canvas.width,canvas.height);
- text(ctx,'Bouffi',28,43,28,ink,'bold');text(ctx,'ÉVOLUTION TERRITORIALE · DONNÉES REMAP',155,42,14,muted);
+ text(ctx,'Bouffi',28,43,28,ink,'bold');text(ctx,model.weather?'EAU & PRÉCIPITATIONS GFS · MESURES REMAP':'ÉVOLUTION TERRITORIALE · DONNÉES REMAP',155,42,14,muted);
  text(ctx,`Cluster ${String(e.id).padStart(2,'0')} · ${e.countries.length} pays`,28,91,32,ink,'bold');
  text(ctx,`${date(meta.origin,e.start)} → ${date(meta.origin,e.end)} ${new Date(meta.origin).getUTCFullYear()} · UTC`,28,125,19,muted);
  text(ctx,'3 secondes · lecture en boucle',970,49,17,muted);text(ctx,`${e.duration} cases horaires`,970,79,17,ink,'bold');
@@ -78,6 +79,16 @@ function makeBackground(model,geo,world,view,plan){
 
 function drawFrame(ctx,background,model,view,t,outlines){
  const {event:e,meta}=model;ctx.drawImage(background.canvas,0,0);ctx.save();clipMap(ctx);
+ if(model.weather){
+  const {pack,mode,opacity,lead}=model.weather,epoch=meta.origin+t*HOUR;
+  const frame=forecastEligible(pack,epoch)?frameAt(pack,epoch+lead*HOUR):null;
+  if(frame)for(let i=0;i<frame.rain.length;i++){
+   const bounds=cellBounds(pack.grid,i),a=view.project(bounds[0][1],bounds[1][0]),b=view.project(bounds[1][1],bounds[0][0]);
+   const w=frame.water[i],r=frame.rain[i];
+   if(mode!=='rain'&&w!==null){const f=Math.min(1,Math.max(0,w/45));ctx.fillStyle=`rgba(${Math.round(215-140*f)},${Math.round(226-150*f)},${Math.round(240-65*f)},${opacity*.62})`;ctx.fillRect(a[0],a[1],b[0]-a[0]+.6,b[1]-a[1]+.6);}
+   if(mode!=='water'&&r!==null&&r>=.05){const f=Math.min(1,Math.log1p(r)/Math.log(6));ctx.fillStyle=`rgba(${Math.round(45+100*f)},${Math.round(161-95*f)},${Math.round(190+30*f)},${opacity*(.35+.6*f)})`;ctx.fillRect(a[0],a[1],b[0]-a[0]+.6,b[1]-a[1]+.6);}
+  }
+ }
  const byId=new Map(e.nodes.map(n=>[n.id,n]));
  ctx.lineWidth=1.8;ctx.strokeStyle=green;ctx.globalAlpha=.6;
  for(const link of e.links){const a=byId.get(link.from),b=byId.get(link.to);if(b.t>t||b.t<t-5)continue;const pa=view.project(a.center.lon,a.center.lat),pb=view.project(b.center.lon,b.center.lat);ctx.beginPath();ctx.moveTo(...pa);ctx.lineTo(...pb);ctx.stroke();}
@@ -90,6 +101,12 @@ function drawFrame(ctx,background,model,view,t,outlines){
  ctx.restore();const at=e.series.find(p=>p.t===t),count=at?.count||0;
  ctx.fillStyle='#fffffff2';ctx.fillRect(46,182,380,81);text(ctx,date(meta.origin,t)+' UTC',62,211,22,ink,'bold');
  text(ctx,`${count} balises actives · ${at?.zones||0} ${(at?.zones||0)===1?'zone':'zones'}`,62,242,17,muted);
+ if(model.weather){
+  const {pack,lead}=model.weather,epoch=meta.origin+t*HOUR,available=forecastEligible(pack,epoch)&&frameAt(pack,epoch+lead*HOUR);
+  ctx.fillStyle='#fffffff0';ctx.fillRect(46,274,620,57);
+  text(ctx,available?`${pack.source.kind==='forecast'?'PRÉVISION MÉTÉO':'RECONSTITUTION MÉTÉO'}${lead?` +${lead} H`:''} · ${date(meta.origin,t+lead)} UTC`:'MÉTÉO ABSENTE OU CALCUL TROP RÉCENT À CET INSTANT',58,294,13,'#365969','bold');
+  text(ctx,`Violet : eau précipitable · bleu : pluie · NOAA GFS / Open-Meteo · grille ${pack.grid.step}°`,58,316,12,muted);
+ }
  // Dynamic values occupy a fixed strip above the temporal chart.
  const excess=Number.isFinite(at?.excess)?`+${at.excess.toLocaleString('fr-FR',{maximumFractionDigits:1})} nSv/h`:'—';
  text(ctx,`Excès médian : ${excess}`,550,850,15,orange,'bold');

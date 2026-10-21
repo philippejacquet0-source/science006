@@ -1,3 +1,4 @@
+import {WeatherUI} from './weather-ui.mjs?v=water-20261021';
 import {hull} from './engine.mjs';
 import {clusterDefaults as defaults} from './cluster-engine.mjs?v=defaults-20261020';
 import {validateCatalogue,validateHourly} from './dataset-catalog.mjs';
@@ -10,8 +11,10 @@ let importWorker=null,busy=false,sourceEpoch=0,catalogue=null;
 let gifWorker=null,gifUrl=null;
 const map=L.map('map',{preferCanvas:true,zoomControl:false,minZoom:2,maxZoom:17,zoomSnap:.25,zoomDelta:.5}).setView([52,12],4);
 L.control.zoom({position:'topright'}).addTo(map);L.control.scale({position:'bottomright',imperial:false}).addTo(map);
-const renderer=L.canvas({padding:.5}),networkLayer=L.layerGroup(),eventLayer=L.layerGroup().addTo(map),currentLayer=L.layerGroup().addTo(map),labelLayer=L.layerGroup().addTo(map);
+map.createPane('radioPane').style.zIndex=450;
+const renderer=L.canvas({padding:.5,pane:'radioPane'}),networkLayer=L.layerGroup(),eventLayer=L.layerGroup().addTo(map),currentLayer=L.layerGroup().addTo(map),labelLayer=L.layerGroup().addTo(map);
 const offline=L.layerGroup().addTo(map);let basemap;
+const weather=new WeatherUI(map);
 const svg=(tag,attrs,children='')=>`<${tag} ${Object.entries(attrs).map(([k,v])=>`${k}="${v}"`).join(' ')}>${children}</${tag}>`;
 const when=t=>new Date(meta.origin+t*3600000);
 const timeLabel=t=>when(t).toLocaleString('fr-FR',{timeZone:'UTC',day:'2-digit',month:'short',hour:'2-digit',minute:'2-digit'});
@@ -78,7 +81,7 @@ function renderTime(){
    }
   }
  }
- updateFacts();drawEventChart();drawStationChart();drawLineage();
+ updateFacts();drawEventChart();drawStationChart();drawLineage();weather.update({meta,selected,instant});
 }
 function drawEventChart(){
  const e=selected,W=1100,H=130,LX=50,RX=1050,top=10,bottom=96,start=e?Math.max(result.settings.baselineHours,e.start-4):result?.settings.baselineHours||0,end=e?Math.min(meta.T-1,e.end+4):meta.T-1;
@@ -107,7 +110,7 @@ function drawLineage(){
 }
 function inspectStation(s){$('station-details').open=true;chooseStation(s);$('station-details').scrollIntoView({block:'nearest',behavior:'smooth'});}
 function chooseStation(s){
- stationIndex=s;if(!meta)return;const p=meta.stations[s];
+ stationIndex=s;if(!meta)return;const p=meta.stations[s];weather.inspectStation(p);
  if(!$('station-select').querySelector(`option[value="${s}"]`))$('station-select').insertAdjacentHTML('beforeend',`<option value="${s}">${escape(p.id)}</option>`);
  $('station-select').value=s;$('station-title').textContent=p.name?`${p.name} · ${p.id}`:p.id;
  $('station-meta').textContent=`${country(p.country)} · ${fmt(p.lat,2)}°, ${fmt(p.lon,2)}° · ${result.coverage[s]}/${meta.T} heures mesurées · référence ${fmt(result.refs[s],2)} nSv/h`;
@@ -153,10 +156,10 @@ function openExport(){
 }
 function generateGif(){
  if(!selected||gifWorker||busy)return;clearGif();
- const event={...selected},snapshot={event,stations:meta.stations,settings:result.settings,meta:{origin:meta.origin,start:meta.start,end:meta.end,coverage:meta.coverage,missingLots:meta.missingLots.length}};
+ const event={...selected},snapshot={event,stations:meta.stations,settings:result.settings,weather:weather.gifSnapshot(),meta:{origin:meta.origin,start:meta.start,end:meta.end,coverage:meta.coverage,missingLots:meta.missingLots.length}};
  const filename=`bouffi-cluster-${event.id}-${new Date(meta.origin+event.start*3600000).toISOString().slice(0,10)}.gif`;
  $('gif-generate').disabled=true;$('gif-cancel').hidden=false;$('gif-status').textContent='Préparation de la carte et de l’animation…';
- const target=new Worker('./gif-worker.mjs?v=gif-export-20261020',{type:'module'});gifWorker=target;
+ const target=new Worker('./gif-worker.mjs?v=weather-20261021',{type:'module'});gifWorker=target;
  target.onmessage=({data:m})=>{if(gifWorker!==target)return;
   if(m.type==='progress'){$('gif-status').textContent=m.message;return;}
   if(m.type==='error'){cancelGif();$('gif-status').textContent='Export non généré : '+m.message;return;}
@@ -188,6 +191,7 @@ $('settings-form').onsubmit=event=>{event.preventDefault();const settings=curren
 function setBusy(value){busy=value;$('settings-open').disabled=value||!meta;$('settings-form').querySelector('[type=submit]').disabled=value;for(const id of ['import-folder','source-select','online-dataset','load-online'])$(id).disabled=value;for(const id of ['export','gif-export'])$(id).disabled=value||!selected;}
 function updateSourceControls(){const local=$('source-select').value==='local';$('local-controls').hidden=!local;$('online-controls').hidden=local;}
 function updateDataset(){
+ weather.loadDataset(meta.datasetId);
  $('data-stations').textContent=fmt(meta.N);$('data-measures').textContent=fmt(meta.rawCount);$('data-coverage').textContent=fmt(meta.coverage*100,1)+' %';$('time').max=meta.T-1;
  const dates=`${timeLabel(0)} → ${new Date(meta.end).toLocaleString('fr-FR',{timeZone:'UTC',day:'2-digit',month:'short',year:'numeric',hour:'2-digit',minute:'2-digit'})} UTC`;
  $('dataset-period').textContent=`RECHERCHE SUR TOUT LE RÉSEAU · ${new Date(meta.start).toLocaleDateString('fr-FR',{timeZone:'UTC'})} — ${new Date(meta.end).toLocaleDateString('fr-FR',{timeZone:'UTC'})}`;
